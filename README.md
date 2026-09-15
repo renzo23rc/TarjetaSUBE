@@ -1,10 +1,13 @@
 # Trabajo Tarjeta 2026
 
+## Integrantes del grupo
+ - Apellido y nombre
+ - Apellido y nombre
+
+## Aclaraciones
 El siguiente trabajo es un enunciado iterativo. Regularmente se ampliará y/o modificará el enunciado.
 
 [ENTREGA](https://forms.gle/NeM1adptvvtioRJH9) (El form cierra el 21/9)
-
-## Aclaraciones
 
 - El trabajo debe implementarse en .NET, usando Git para el control de versiones y NUnit como framework de testing.
 - Los tests unitarios no deben depender de la base de datos real. Tienen [este ejercicio](https://github.com/mgonzalesips/Tienda) de ejemplo para ver como hacerlo
@@ -31,6 +34,7 @@ Para esta iteración se consideran los siguientes supuestos:
 
 Se pide:
 
+- Completar los nombres de cada integrante al principio del enunciado. 
 - Hacer un fork del repositorio.
 - Crear un `DbContext` con los `DbSet` correspondientes a Tarjeta, Colectivo y Boleto.
 - Implementar el código de las clases Tarjeta, Colectivo y Boleto.
