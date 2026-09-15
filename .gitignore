@@ -1,0 +1,18 @@
+# Local Pi runtime state
+.atl/
+.pi/
+openspec/
+
+## .NET
+bin/
+obj/
+
+## Visual Studio
+.vs/
+*.user
+*.suo
+
+## Base de datos local (SQLite)
+*.db
+*.db-shm
+*.db-wal
