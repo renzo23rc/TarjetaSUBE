@@ -40,3 +40,4 @@ Se pide:
 - Implementar el código de las clases Tarjeta, Colectivo y Boleto.
 - Hacer que el test Tarjeta.cs funcione correctamente con todos los montos de pago listados.
 - Enviar el enlace del repositorio al mail del profesor con los integrantes del grupo: dos por grupo.
+# TarjetaSube
