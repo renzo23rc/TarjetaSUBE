@@ -153,3 +153,23 @@ Un usuario de la tarjeta SUBE puede realizar trasbordos entre colectivos sin cos
 - Los trasbordos se pueden realizar de lunes a sábado de 7:00 a 22:00.
 - Todas las tarjetas pueden realizar trasbordos.
 - Cuando se paga un trasbordo se indica también en el boleto.
+
+## Iteración 5
+
+### Mi Bici Tu Bici
+
+Implementar el sistema de "Mi Bici Tu Bici". Cuando un usuario va a retirar una bici de la estación de bicicletas, debe pagar la tarifa de servicio con su tarjeta SUBE. Si el pago es procesado correctamente, entonces podrá retirar una bicicleta, sino la estación rechazará el pago y no le permitirá retirar la misma. Se les pide:
+
+- Crear la clase que representará a la estación de bicicletas y los métodos que consideren necesarios para cumplir con los requerimientos.
+- Cualquier tarjeta puede abonar el servicio.
+- La tarifa es de $2418,75 por día.
+- El tiempo máximo de uso de una bici es de 1 hora. Por lo tanto, si el uso de la misma excede el tiempo límite se le aplicará una multa de $1250 a la hora de pagar. Esta multa se acumula si la persona usó la bici más tiempo del estipulado varias veces el mismo día.
+- No existen descuentos por franquicia para este sistema.
+
+### Nuevos tests
+
+Testear las nuevas funcionalidades del sistema de Mi Bici Tu Bici. Como mínimo, deben probar los siguientes casos:
+
+- Se paga la tarifa y se retira una bici exitosamente. Verificando que la tarifa cobrada sea la correcta, sin demora en la devolución y con el saldo suficiente en la tarjeta.
+- No se puede retirar la bici. Validando que esto suceda cuando no hay suficiente saldo en la tarjeta teniendo o no una multa pendiente de pagar.
+- Se retira una bici con una o varias multas acumuladas.
