@@ -63,11 +63,11 @@ public class ColectivoTests
     }
 
     [Test]
-    public void PagarCon_RetornaFalse_YNoGeneraBoleto_CuandoNoHaySaldo()
+    public void PagarCon_RetornaFalse_YNoGeneraBoleto_CuandoQuedariaDebajoDelMinimo()
     {
         var tarjeta = Tarjeta.Crear();
         tarjeta.CargarSaldo(2000m);
-        tarjeta.Pagar(1000m);
+        tarjeta.Pagar(3000m);
         _db.SaveChanges();
 
         var colectivo = Colectivo.Crear("102");
@@ -76,6 +76,6 @@ public class ColectivoTests
 
         Assert.That(resultado, Is.False);
         Assert.That(_db.Boletos.ToList(), Is.Empty);
-        Assert.That(tarjeta.Saldo, Is.EqualTo(1000m));
+        Assert.That(tarjeta.Saldo, Is.EqualTo(-1000m));
     }
 }
