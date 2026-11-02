@@ -84,14 +84,14 @@ public class TarjetaTests
     }
 
     [Test]
-    public void Pagar_RetornaFalseYNoModificaSaldo_CuandoElSaldoEsInsuficiente()
+    public void Pagar_RetornaFalseYNoModificaSaldo_CuandoQuedariaDebajoDelMinimo()
     {
-        var tarjeta = DejarTarjetaConSaldo(1000m);
+        var tarjeta = DejarTarjetaConSaldo(-1000m);
 
         var resultado = tarjeta.Pagar(Colectivo.TarifaBasica);
 
         Assert.That(resultado, Is.False);
-        Assert.That(tarjeta.Saldo, Is.EqualTo(1000m));
+        Assert.That(tarjeta.Saldo, Is.EqualTo(-1000m));
     }
 
     [Test]
@@ -109,6 +109,35 @@ public class TarjetaTests
             Throws.TypeOf<ArgumentException>());
 
         Assert.That(tarjeta.Saldo, Is.EqualTo(2000m));
+    }
+
+    [Test]
+    public void Pagar_NoPuedeQuedarConMenosSaldoQueElPermitido()
+    {
+        var tarjeta = DejarTarjetaConSaldo(200m);
+
+        var primerViaje = tarjeta.Pagar(Colectivo.TarifaBasica);
+
+        Assert.That(primerViaje, Is.True);
+        Assert.That(tarjeta.Saldo, Is.EqualTo(200m - Colectivo.TarifaBasica));
+
+        var segundoViaje = tarjeta.Pagar(Colectivo.TarifaBasica);
+
+        Assert.That(segundoViaje, Is.False);
+        Assert.That(tarjeta.Saldo, Is.EqualTo(200m - Colectivo.TarifaBasica));
+    }
+
+    [Test]
+    public void CargarSaldo_ConSaldoNegativoPorViajePlus_DescuentaDeuda()
+    {
+        var tarjeta = DejarTarjetaConSaldo(200m);
+
+        tarjeta.Pagar(Colectivo.TarifaBasica);
+        Assert.That(tarjeta.Saldo, Is.EqualTo(200m - Colectivo.TarifaBasica));
+
+        tarjeta.CargarSaldo(2000m);
+
+        Assert.That(tarjeta.Saldo, Is.EqualTo(200m - Colectivo.TarifaBasica + 2000m));
     }
 
     // 1000 no es un monto de carga aceptado: se llega a ese saldo
