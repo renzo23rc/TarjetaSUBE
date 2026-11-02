@@ -21,7 +21,7 @@ public class Colectivo
     {
         var tarifa = tarjeta.CalcularTarifa(TarifaBasica);
 
-        if (tarifa > 0 && !tarjeta.Pagar(tarifa))
+        if (!tarjeta.Pagar(tarifa))
         {
             return false;
         }

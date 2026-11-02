@@ -80,10 +80,9 @@ public class ColectivoTests
     }
 
     [Test]
-    public void PagarCon_ConMedioBoleto_CobraLaMitadDeLaTarifa()
+    public void PagarCon_MedioBoleto_DescuentaLaMitadDeLaTarifa()
     {
-        var tarjeta = Tarjeta.Crear();
-        tarjeta.TarjetaTipo = CrearTipo("Medio boleto estudiantil", 50m);
+        var tarjeta = Tarjeta.Crear(new TarjetaMedioBoleto());
         tarjeta.CargarSaldo(2000m);
         var colectivo = Colectivo.Crear("102");
 
@@ -97,28 +96,41 @@ public class ColectivoTests
     }
 
     [Test]
-    public void PagarCon_ConFranquiciaCompleta_SiemprePuedePagar()
+    public void PagarCon_FranquiciaCompleta_SiemprePuedePagarAunSinSaldo()
     {
-        var tarjeta = Tarjeta.Crear();
-        tarjeta.CargarSaldo(2000m);
-        tarjeta.Pagar(3000m); // deja el saldo en -1000 (viaje plus)
-        tarjeta.TarjetaTipo = CrearTipo("Franquicia completa", 100m);
+        var tarjeta = Tarjeta.Crear(new TarjetaFranquiciaCompleta());
         var colectivo = Colectivo.Crear("102");
 
         var resultado = colectivo.PagarCon(tarjeta);
 
         Assert.That(resultado, Is.True);
-        Assert.That(tarjeta.Saldo, Is.EqualTo(-1000m)); // no descuenta nada
+        Assert.That(tarjeta.Saldo, Is.EqualTo(0m));
 
         var boleto = _db.Boletos.Single();
         Assert.That(boleto.Tarifa, Is.EqualTo(0m));
     }
 
-    private static TarjetaTipo CrearTipo(string nombre, decimal descuento)
+    [Test]
+    public void PagarCon_ConSoloTarjetaTipoId_ResuelveElTipoDesdeLaBase()
     {
-        var tipo = new TarjetaTipo { Nombre = nombre, PorcentajeDescuento = descuento };
-        Contexto.Db.TarjetaTipos.Add(tipo);
-        Contexto.Db.SaveChanges();
-        return tipo;
+        var tipo = new TarjetaMedioBoleto();
+        _db.TarjetaTipos.Add(tipo);
+        _db.SaveChanges();
+
+        var tarjeta = Tarjeta.Crear();
+        tarjeta.CargarSaldo(2000m);
+        tarjeta.TarjetaTipoId = tipo.Id;
+        _db.SaveChanges();
+        _db.ChangeTracker.Clear();
+
+        var fresca = _db.Tarjetas.Find(tarjeta.Id)!;
+        Assert.That(fresca.TarjetaTipo, Is.Null);
+        var colectivo = Colectivo.Crear("102");
+
+        var resultado = colectivo.PagarCon(fresca);
+
+        Assert.That(resultado, Is.True);
+        Assert.That(fresca.Saldo, Is.EqualTo(2000m - Colectivo.TarifaBasica / 2));
+        Assert.That(_db.Boletos.Single().Tarifa, Is.EqualTo(Colectivo.TarifaBasica / 2));
     }
 }
