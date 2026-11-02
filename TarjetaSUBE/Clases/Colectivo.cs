@@ -19,14 +19,16 @@ public class Colectivo
 
     public bool PagarCon(Tarjeta tarjeta)
     {
-        if (!tarjeta.Pagar(TarifaBasica))
+        var tarifa = tarjeta.CalcularTarifa(TarifaBasica);
+
+        if (tarifa > 0 && !tarjeta.Pagar(tarifa))
         {
             return false;
         }
 
         var boleto = new Boleto
         {
-            Tarifa = TarifaBasica,
+            Tarifa = tarifa,
             SaldoRestante = tarjeta.Saldo,
             Fecha = DateTime.Now,
             Tarjeta = tarjeta,
