@@ -11,7 +11,7 @@ public class TarjetaDbContext : DbContext
     public DbSet<Tarjeta> Tarjetas => Set<Tarjeta>();
     public DbSet<Colectivo> Colectivos => Set<Colectivo>();
     public DbSet<Boleto> Boletos => Set<Boleto>();
-    public DbSet<TipoTarjeta> TiposTarjeta => Set<TipoTarjeta>();
+    public DbSet<TarjetaTipo> TarjetaTipos => Set<TarjetaTipo>();
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
@@ -23,6 +23,11 @@ public class TarjetaDbContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.Entity<TarjetaNormal>();
+        modelBuilder.Entity<MedioBoletoEstudiantil>();
+        modelBuilder.Entity<BoletoGratuitoEstudiantil>();
+        modelBuilder.Entity<FranquiciaCompleta>();
+
         modelBuilder.Entity<Tarjeta>()
             .Property(t => t.Saldo)
             .HasPrecision(18, 2);

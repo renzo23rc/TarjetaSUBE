@@ -2,12 +2,12 @@ using TarjetaSUBE;
 
 namespace TarjetaSUBETest;
 
-public class TipoTarjetaTests
+public class TarjetaTipoTests
 {
     [Test]
     public void CalcularMonto_Normal_DevuelveTarifaCompleta()
     {
-        var tipo = new TipoTarjeta { Nombre = "Normal", PorcentajeDescuento = 0m };
+        TarjetaTipo tipo = new TarjetaNormal { Nombre = "Normal" };
 
         var resultado = tipo.CalcularMonto(Colectivo.TarifaBasica);
 
@@ -17,7 +17,7 @@ public class TipoTarjetaTests
     [Test]
     public void CalcularMonto_MedioBoleto_DevuelveLaMitad()
     {
-        var tipo = new TipoTarjeta { Nombre = "Medio Boleto Estudiantil", PorcentajeDescuento = 50m };
+        TarjetaTipo tipo = new MedioBoletoEstudiantil { Nombre = "Medio Boleto Estudiantil" };
 
         var resultado = tipo.CalcularMonto(Colectivo.TarifaBasica);
 
@@ -25,9 +25,19 @@ public class TipoTarjetaTests
     }
 
     [Test]
+    public void CalcularMonto_BoletoGratuito_DevuelveCero()
+    {
+        TarjetaTipo tipo = new BoletoGratuitoEstudiantil { Nombre = "Boleto Gratuito Estudiantil" };
+
+        var resultado = tipo.CalcularMonto(Colectivo.TarifaBasica);
+
+        Assert.That(resultado, Is.EqualTo(0m));
+    }
+
+    [Test]
     public void CalcularMonto_FranquiciaCompleta_DevuelveCero()
     {
-        var tipo = new TipoTarjeta { Nombre = "Franquicia Completa", PorcentajeDescuento = 100m };
+        TarjetaTipo tipo = new FranquiciaCompleta { Nombre = "Franquicia Completa" };
 
         var resultado = tipo.CalcularMonto(Colectivo.TarifaBasica);
 
