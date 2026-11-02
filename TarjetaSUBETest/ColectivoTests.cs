@@ -230,4 +230,47 @@ public class ColectivoTests
         Assert.That(boleto.Tarifa, Is.EqualTo(1580m));
         Assert.That(_db.Boletos.Count(b => b.Tarifa < 1580m), Is.EqualTo(2));
     }
+
+    [Test]
+    public void BoletoGratuito_PermiteDosViajesGratisPorDia()
+    {
+        var tipo = new TarjetaTipo { Nombre = "Boleto Gratuito Estudiantil", PorcentajeDescuento = 100m, MaxViajesConDescuentoPorDia = 2 };
+        _db.TarjetaTipos.Add(tipo);
+        var tarjeta = Tarjeta.Crear();
+        tarjeta.TarjetaTipo = tipo;
+        tarjeta.TarjetaTipoId = tipo.Id;
+        _db.SaveChanges();
+        var colectivo = Colectivo.Crear("102");
+
+        Assert.That(colectivo.PagarCon(tarjeta), Is.True);
+        Assert.That(colectivo.PagarCon(tarjeta), Is.True);
+        Assert.That(tarjeta.Saldo, Is.EqualTo(0m));
+        Assert.That(_db.Boletos.Count(), Is.EqualTo(2));
+        Assert.That(_db.Boletos.Count(b => b.Tarifa == 0m), Is.EqualTo(2));
+    }
+
+    [Test]
+    public void BoletoGratuito_ViajesPosterioresAlSegundoSeCobranConPrecioCompleto()
+    {
+        var tipo = new TarjetaTipo { Nombre = "Boleto Gratuito Estudiantil", PorcentajeDescuento = 100m, MaxViajesConDescuentoPorDia = 2 };
+        _db.TarjetaTipos.Add(tipo);
+        var tarjeta = Tarjeta.Crear();
+        tarjeta.CargarSaldo(2000m);
+        tarjeta.TarjetaTipo = tipo;
+        tarjeta.TarjetaTipoId = tipo.Id;
+        var ahora = DateTime.Now;
+        _db.Boletos.Add(new Boleto { Tarifa = 0m, TotalAbonado = 0m, Saldo = 0m, SaldoRestante = 0m, Fecha = ahora, TipoTarjeta = "Boleto Gratuito Estudiantil", Linea = "102", TarjetaId = tarjeta.Id, Tarjeta = tarjeta });
+        _db.Boletos.Add(new Boleto { Tarifa = 0m, TotalAbonado = 0m, Saldo = 0m, SaldoRestante = 0m, Fecha = ahora, TipoTarjeta = "Boleto Gratuito Estudiantil", Linea = "102", TarjetaId = tarjeta.Id, Tarjeta = tarjeta });
+        _db.SaveChanges();
+        var colectivo = Colectivo.Crear("102");
+
+        Assert.That(colectivo.PagarCon(tarjeta), Is.True);
+        Assert.That(colectivo.PagarCon(tarjeta), Is.True);
+        var boletos = _db.Boletos.OrderBy(b => b.Id).ToList();
+        Assert.That(boletos.Count, Is.EqualTo(4));
+        Assert.That(boletos.Count(b => b.Tarifa == 0m), Is.EqualTo(2));
+        Assert.That(boletos[2].Tarifa, Is.EqualTo(1580m));
+        Assert.That(boletos[3].Tarifa, Is.EqualTo(1580m));
+        Assert.That(tarjeta.Saldo, Is.EqualTo(2000m - 1580m - 1580m));
+    }
 }
