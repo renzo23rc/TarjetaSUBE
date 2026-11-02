@@ -23,11 +23,6 @@ public class TarjetaDbContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<TarjetaNormal>();
-        modelBuilder.Entity<MedioBoletoEstudiantil>();
-        modelBuilder.Entity<BoletoGratuitoEstudiantil>();
-        modelBuilder.Entity<FranquiciaCompleta>();
-
         modelBuilder.Entity<Tarjeta>()
             .Property(t => t.Saldo)
             .HasPrecision(18, 2);

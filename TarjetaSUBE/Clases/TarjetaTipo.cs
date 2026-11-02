@@ -1,9 +1,13 @@
 namespace TarjetaSUBE;
 
-public abstract class TarjetaTipo
+public class TarjetaTipo
 {
     public int Id { get; set; }
     public string Nombre { get; set; } = string.Empty;
+    public decimal PorcentajeDescuento { get; set; }
 
-    public abstract decimal CalcularMonto(decimal tarifaBasica);
+    public virtual decimal CalcularMonto(decimal tarifaBasica)
+    {
+        return tarifaBasica * (1 - PorcentajeDescuento / 100m);
+    }
 }
