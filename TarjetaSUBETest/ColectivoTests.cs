@@ -188,4 +188,46 @@ public class ColectivoTests
         Assert.That(boleto.Tarifa, Is.EqualTo(1580m));
         Assert.That(boleto.TotalAbonado, Is.EqualTo(2000m));
     }
+
+    [Test]
+    public void MedioBoleto_NoPermiteViajarNuevamenteEnMenosDeCincoMinutos()
+    {
+        var tipo = new TarjetaTipo { Nombre = "Medio Boleto Estudiantil", PorcentajeDescuento = 50m, MaxViajesConDescuentoPorDia = 2, MinutosMinimosEntreViajes = 5 };
+        _db.TarjetaTipos.Add(tipo);
+        var tarjeta = Tarjeta.Crear();
+        tarjeta.CargarSaldo(5000m);
+        tarjeta.TarjetaTipo = tipo;
+        tarjeta.TarjetaTipoId = tipo.Id;
+        _db.SaveChanges();
+        var colectivo = Colectivo.Crear("102");
+
+        Assert.That(colectivo.PagarCon(tarjeta), Is.True);
+        Assert.That(colectivo.PagarCon(tarjeta), Is.False);
+        Assert.That(_db.Boletos.Count(), Is.EqualTo(1));
+    }
+
+    [Test]
+    public void MedioBoleto_SoloPermiteDosViajesPorDiaConDescuento_ElTerceroPagaNormal()
+    {
+        var tipo = new TarjetaTipo { Nombre = "Medio Boleto Estudiantil", PorcentajeDescuento = 50m, MaxViajesConDescuentoPorDia = 2, MinutosMinimosEntreViajes = 5 };
+        _db.TarjetaTipos.Add(tipo);
+        var tarjeta = Tarjeta.Crear();
+        tarjeta.CargarSaldo(10000m);
+        tarjeta.TarjetaTipo = tipo;
+        tarjeta.TarjetaTipoId = tipo.Id;
+        var fecha = DateTime.Now.AddMinutes(-10);
+        if (fecha.Date != DateTime.Today)
+        {
+            Assert.Inconclusive("Cruce de medianoche: la ventana de 10 minutos cambió de día.");
+        }
+        _db.Boletos.Add(new Boleto { Tarifa = 790m, TotalAbonado = 790m, Saldo = 9210m, SaldoRestante = 9210m, Fecha = fecha, TipoTarjeta = "Medio Boleto Estudiantil", Linea = "102", TarjetaId = tarjeta.Id, Tarjeta = tarjeta });
+        _db.Boletos.Add(new Boleto { Tarifa = 790m, TotalAbonado = 790m, Saldo = 8420m, SaldoRestante = 8420m, Fecha = fecha, TipoTarjeta = "Medio Boleto Estudiantil", Linea = "102", TarjetaId = tarjeta.Id, Tarjeta = tarjeta });
+        _db.SaveChanges();
+        var colectivo = Colectivo.Crear("102");
+
+        Assert.That(colectivo.PagarCon(tarjeta), Is.True);
+        var boleto = _db.Boletos.OrderByDescending(b => b.Id).First();
+        Assert.That(boleto.Tarifa, Is.EqualTo(1580m));
+        Assert.That(_db.Boletos.Count(b => b.Tarifa < 1580m), Is.EqualTo(2));
+    }
 }
