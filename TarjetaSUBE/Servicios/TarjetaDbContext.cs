@@ -11,6 +11,7 @@ public class TarjetaDbContext : DbContext
     public DbSet<Tarjeta> Tarjetas => Set<Tarjeta>();
     public DbSet<Colectivo> Colectivos => Set<Colectivo>();
     public DbSet<Boleto> Boletos => Set<Boleto>();
+    public DbSet<TipoTarjeta> TiposTarjeta => Set<TipoTarjeta>();
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {

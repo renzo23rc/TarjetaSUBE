@@ -4,6 +4,8 @@ public class Tarjeta
 {
     public int Id { get; set; }
     public decimal Saldo { get; private set; }
+    public int? TipoTarjetaId { get; set; }
+    public TipoTarjeta? TipoTarjeta { get; set; }
 
     public const decimal SaldoMaximo = 40000m;
 
