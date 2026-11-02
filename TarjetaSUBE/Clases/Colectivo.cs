@@ -20,17 +20,27 @@ public class Colectivo
     public bool PagarCon(Tarjeta tarjeta)
     {
         var tarifa = tarjeta.CalcularTarifa(TarifaBasica);
+        var saldoPrevio = tarjeta.Saldo;
 
         if (!tarjeta.Pagar(tarifa))
         {
             return false;
         }
 
+        var totalAbonado = tarifa;
+        if (saldoPrevio < 0 && tarifa > 0)
+        {
+            totalAbonado = tarifa + decimal.Negate(saldoPrevio);
+        }
+
         var boleto = new Boleto
         {
             Tarifa = tarifa,
+            TotalAbonado = totalAbonado,
             SaldoRestante = tarjeta.Saldo,
             Fecha = DateTime.Now,
+            TipoTarjeta = tarjeta.TarjetaTipo?.Nombre ?? "Normal",
+            Linea = Linea,
             Tarjeta = tarjeta,
             Colectivo = this,
         };
