@@ -52,6 +52,7 @@ public class Tarjeta
             return false;
         }
 
+        Saldo -= tarifa;
         return true;
     }
 }
