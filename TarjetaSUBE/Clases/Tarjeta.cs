@@ -46,11 +46,6 @@ public class Tarjeta
 
     public bool Pagar(decimal tarifa)
     {
-        if (tarifa <= 0)
-        {
-            throw new ArgumentException("La tarifa debe ser mayor que cero.");
-        }
-
         if (Saldo - tarifa < SaldoMinimo)
         {
             return false;
