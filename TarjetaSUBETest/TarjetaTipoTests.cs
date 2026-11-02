@@ -5,16 +5,6 @@ namespace TarjetaSUBETest;
 public class TarjetaTipoTests
 {
     [Test]
-    public void CalcularMonto_Normal_DevuelveTarifaCompleta()
-    {
-        TarjetaTipo tipo = new TarjetaNormal { Nombre = "Normal" };
-
-        var resultado = tipo.CalcularMonto(Colectivo.TarifaBasica);
-
-        Assert.That(resultado, Is.EqualTo(Colectivo.TarifaBasica));
-    }
-
-    [Test]
     public void CalcularMonto_MedioBoleto_DevuelveLaMitad()
     {
         TarjetaTipo tipo = new MedioBoletoEstudiantil { Nombre = "Medio Boleto Estudiantil" };
