@@ -7,6 +7,8 @@ public class Tarjeta
 
     public const decimal SaldoMaximo = 40000m;
 
+    public const decimal SaldoMinimo = -2000m;
+
     public static readonly decimal[] MontosDeCarga =
     {
         2000m, 3000m, 4000m, 5000m, 8000m, 10000m, 15000m, 20000m, 25000m, 30000m
@@ -47,7 +49,7 @@ public class Tarjeta
             throw new ArgumentException("La tarifa debe ser mayor que cero.");
         }
 
-        if (Saldo < tarifa)
+        if (Saldo - tarifa < SaldoMinimo)
         {
             return false;
         }
