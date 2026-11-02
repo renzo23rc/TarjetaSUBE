@@ -5,6 +5,8 @@ public class TarjetaTipo
     public int Id { get; set; }
     public string Nombre { get; set; } = string.Empty;
     public decimal PorcentajeDescuento { get; set; }
+    public int? MaxViajesConDescuentoPorDia { get; set; }
+    public int? MinutosMinimosEntreViajes { get; set; }
 
     public virtual decimal CalcularMonto(decimal tarifaBasica)
     {
