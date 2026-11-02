@@ -24,17 +24,28 @@ public class Colectivo
             : null;
 
         var monto = tarjeta.TarjetaTipo?.CalcularMonto(TarifaBasica) ?? TarifaBasica;
+        var saldoPrevio = tarjeta.Saldo;
 
         if (!tarjeta.Pagar(monto))
         {
             return false;
         }
 
+        var totalAbonado = monto;
+        if (saldoPrevio < 0 && monto > 0)
+        {
+            totalAbonado = monto + decimal.Negate(saldoPrevio);
+        }
+
         var boleto = new Boleto
         {
             Tarifa = monto,
+            TotalAbonado = totalAbonado,
+            Saldo = tarjeta.Saldo,
             SaldoRestante = tarjeta.Saldo,
             Fecha = DateTime.Now,
+            TipoTarjeta = tarjeta.TarjetaTipo?.Nombre ?? "Normal",
+            Linea = Linea,
             Tarjeta = tarjeta,
             Colectivo = this,
         };

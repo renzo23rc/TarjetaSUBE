@@ -32,6 +32,14 @@ public class TarjetaDbContext : DbContext
             .HasPrecision(18, 2);
 
         modelBuilder.Entity<Boleto>()
+            .Property(b => b.TotalAbonado)
+            .HasPrecision(18, 2);
+
+        modelBuilder.Entity<Boleto>()
+            .Property(b => b.Saldo)
+            .HasPrecision(18, 2);
+
+        modelBuilder.Entity<Boleto>()
             .Property(b => b.SaldoRestante)
             .HasPrecision(18, 2);
     }
