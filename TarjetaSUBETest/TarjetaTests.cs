@@ -138,6 +138,19 @@ public class TarjetaTests
         Assert.That(tarjeta.Saldo, Is.EqualTo(200m - Colectivo.TarifaBasica));
     }
 
+    [Test]
+    public void CargarSaldo_ConSaldoNegativoPorViajePlus_DescuentaDeuda()
+    {
+        var tarjeta = DejarTarjetaConSaldo(200m);
+
+        tarjeta.Pagar(Colectivo.TarifaBasica);
+        Assert.That(tarjeta.Saldo, Is.EqualTo(200m - Colectivo.TarifaBasica));
+
+        tarjeta.CargarSaldo(2000m);
+
+        Assert.That(tarjeta.Saldo, Is.EqualTo(200m - Colectivo.TarifaBasica + 2000m));
+    }
+
     // 1000 no es un monto de carga aceptado: se llega a ese saldo
     // cargando 2000 y pagando un pasaje de 1000.
     private static Tarjeta DejarTarjetaConSaldo(decimal saldoObjetivo)
