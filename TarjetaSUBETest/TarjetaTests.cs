@@ -59,16 +59,81 @@ public class TarjetaTests
     }
 
     [Test]
-    public void CargarSaldo_LanzaExcepcion_CuandoSuperaElSaldoMaximo()
+    public void CargarSaldo_SuperandoMaximoPermitido_AcreditaHasta56000YExcedenteQuedaPendiente()
     {
         var tarjeta = Tarjeta.Crear();
         tarjeta.CargarSaldo(30000m);
+        tarjeta.CargarSaldo(20000m);
 
-        Assert.That(
-            () => tarjeta.CargarSaldo(15000m),
-            Throws.TypeOf<ArgumentException>());
+        tarjeta.CargarSaldo(10000m);
 
-        Assert.That(tarjeta.Saldo, Is.EqualTo(30000m));
+        Assert.That(tarjeta.Saldo, Is.EqualTo(56000m));
+        Assert.That(tarjeta.SaldoPendiente, Is.EqualTo(4000m));
+
+        var enDb = _db.Tarjetas.Find(tarjeta.Id);
+        Assert.That(enDb, Is.Not.Null);
+        Assert.That(enDb!.Saldo, Is.EqualTo(56000m));
+        Assert.That(enDb.SaldoPendiente, Is.EqualTo(4000m));
+    }
+
+    [Test]
+    public void Pagar_ConSaldoPendiente_AcreditaAutomaticamenteHastaElMaximoLuegoDelViaje()
+    {
+        var tarjeta = Tarjeta.Crear();
+        tarjeta.CargarSaldo(30000m);
+        tarjeta.CargarSaldo(20000m);
+        tarjeta.CargarSaldo(10000m);
+        Assert.That(tarjeta.Saldo, Is.EqualTo(56000m));
+        Assert.That(tarjeta.SaldoPendiente, Is.EqualTo(4000m));
+
+        Assert.That(tarjeta.Pagar(1580m), Is.True);
+
+        Assert.That(tarjeta.Saldo, Is.EqualTo(56000m));
+        Assert.That(tarjeta.SaldoPendiente, Is.EqualTo(2420m));
+    }
+
+    [Test]
+    public void AcreditarCarga_ConSaldoNegativoQuePasaAPositivo_RetornaMontoRecuperadoHastaCero()
+    {
+        var tarjeta = Tarjeta.Crear();
+        tarjeta.CargarSaldo(2000m);
+        tarjeta.Pagar(2500m);
+        tarjeta.SaldoPendiente = 2000m;
+
+        var recuperado = tarjeta.AcreditarCarga();
+
+        Assert.That(recuperado, Is.EqualTo(500m));
+        Assert.That(tarjeta.Saldo, Is.EqualTo(1500m));
+        Assert.That(tarjeta.SaldoPendiente, Is.EqualTo(0m));
+    }
+
+    [Test]
+    public void AcreditarCarga_ConSaldoNegativoQueSigueEnNegativo_RetornaTotalAcreditado()
+    {
+        var tarjeta = Tarjeta.Crear();
+        tarjeta.CargarSaldo(2000m);
+        tarjeta.Pagar(3500m);
+        tarjeta.SaldoPendiente = 500m;
+
+        var recuperado = tarjeta.AcreditarCarga();
+
+        Assert.That(recuperado, Is.EqualTo(500m));
+        Assert.That(tarjeta.Saldo, Is.EqualTo(-1000m));
+        Assert.That(tarjeta.SaldoPendiente, Is.EqualTo(0m));
+    }
+
+    [Test]
+    public void AcreditarCarga_ConSaldoPositivoPrevio_RetornaCero()
+    {
+        var tarjeta = Tarjeta.Crear();
+        tarjeta.CargarSaldo(2000m);
+        tarjeta.SaldoPendiente = 2000m;
+
+        var recuperado = tarjeta.AcreditarCarga();
+
+        Assert.That(recuperado, Is.EqualTo(0m));
+        Assert.That(tarjeta.Saldo, Is.EqualTo(4000m));
+        Assert.That(tarjeta.SaldoPendiente, Is.EqualTo(0m));
     }
 
     [Test]
