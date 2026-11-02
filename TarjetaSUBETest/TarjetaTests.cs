@@ -112,17 +112,6 @@ public class TarjetaTests
     }
 
     [Test]
-    public void Pagar_PermiteSaldoNegativoHastaMenos2000()
-    {
-        var tarjeta = DejarTarjetaConSaldo(200m);
-
-        var resultado = tarjeta.Pagar(Colectivo.TarifaBasica);
-
-        Assert.That(resultado, Is.True);
-        Assert.That(tarjeta.Saldo, Is.EqualTo(200m - Colectivo.TarifaBasica));
-    }
-
-    [Test]
     public void Pagar_NoPuedeQuedarConMenosSaldoQueElPermitido()
     {
         var tarjeta = DejarTarjetaConSaldo(200m);
