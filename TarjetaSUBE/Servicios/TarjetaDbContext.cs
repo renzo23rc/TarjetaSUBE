@@ -32,11 +32,10 @@ public class TarjetaDbContext : DbContext
             .WithMany()
             .HasForeignKey(t => t.TarjetaTipoId);
 
-        modelBuilder.Entity<TarjetaTipo>().HasData(
-            new TarjetaTipo { Id = 1, Nombre = "Normal", PorcentajeDescuento = 0m },
-            new TarjetaTipo { Id = 2, Nombre = "Medio boleto estudiantil", PorcentajeDescuento = 50m },
-            new TarjetaTipo { Id = 3, Nombre = "Boleto gratuito estudiantil", PorcentajeDescuento = 100m },
-            new TarjetaTipo { Id = 4, Nombre = "Franquicia completa", PorcentajeDescuento = 100m });
+        modelBuilder.Entity<TarjetaNormal>().HasData(new TarjetaNormal { Id = 1 });
+        modelBuilder.Entity<TarjetaMedioBoleto>().HasData(new TarjetaMedioBoleto { Id = 2 });
+        modelBuilder.Entity<TarjetaBoletoGratuito>().HasData(new TarjetaBoletoGratuito { Id = 3 });
+        modelBuilder.Entity<TarjetaFranquiciaCompleta>().HasData(new TarjetaFranquiciaCompleta { Id = 4 });
 
         modelBuilder.Entity<Boleto>()
             .Property(b => b.Tarifa)
@@ -45,5 +44,11 @@ public class TarjetaDbContext : DbContext
         modelBuilder.Entity<Boleto>()
             .Property(b => b.SaldoRestante)
             .HasPrecision(18, 2);
+
+        modelBuilder.Entity<TarjetaTipo>().UseTphMappingStrategy();
+        modelBuilder.Entity<TarjetaNormal>();
+        modelBuilder.Entity<TarjetaMedioBoleto>();
+        modelBuilder.Entity<TarjetaBoletoGratuito>();
+        modelBuilder.Entity<TarjetaFranquiciaCompleta>();
     }
 }
