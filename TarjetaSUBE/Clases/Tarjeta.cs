@@ -59,4 +59,9 @@ public class Tarjeta
         Saldo -= tarifa;
         return true;
     }
+
+    public decimal CalcularTarifa(decimal tarifaBasica)
+    {
+        return TarjetaTipo?.CalcularMonto(tarifaBasica) ?? tarifaBasica;
+    }
 }
