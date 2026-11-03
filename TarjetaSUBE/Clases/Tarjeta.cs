@@ -6,6 +6,8 @@ public class Tarjeta
     public decimal Saldo { get; private set; }
     public int? TarjetaTipoId { get; set; }
     public TarjetaTipo? TarjetaTipo { get; set; }
+    public DateTime? FechaPrimerBoleto { get; private set; }
+    public string? LineaUltimoViaje { get; private set; }
 
     public const decimal SaldoMaximo = 40000m;
 
@@ -62,5 +64,28 @@ public class Tarjeta
             : null;
 
         return TarjetaTipo?.CalcularMonto(tarifaBasica) ?? tarifaBasica;
+    }
+
+    public bool PuedeTransferir(string linea, DateTime ahora)
+    {
+        if (FechaPrimerBoleto is null || LineaUltimoViaje is null)
+        {
+            return false;
+        }
+
+        var esLineaDistinta = linea != LineaUltimoViaje;
+        var estaDentroDeLaVentana = ahora <= FechaPrimerBoleto.Value.AddHours(1);
+
+        return esLineaDistinta && estaDentroDeLaVentana;
+    }
+
+    public void RegistrarViaje(string linea, DateTime fecha, bool esTrasbordo)
+    {
+        LineaUltimoViaje = linea;
+
+        if (!esTrasbordo)
+        {
+            FechaPrimerBoleto = fecha;
+        }
     }
 }

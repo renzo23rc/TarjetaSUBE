@@ -17,9 +17,14 @@ public class Colectivo
         return colectivo;
     }
 
+    private static readonly TimeSpan HoraInicioTrasbordo = TimeSpan.FromHours(7);
+    private static readonly TimeSpan HoraFinTrasbordo = TimeSpan.FromHours(22);
+
     public bool PagarCon(Tarjeta tarjeta)
     {
-        var tarifa = tarjeta.CalcularTarifa(TarifaBasica);
+        var ahora = Contexto.Reloj.GetLocalNow().DateTime;
+        var esTrasbordo = EsHorarioDeTrasbordo(ahora) && tarjeta.PuedeTransferir(Linea, ahora);
+        var tarifa = esTrasbordo ? 0m : tarjeta.CalcularTarifa(TarifaBasica);
 
         if (!tarjeta.Pagar(tarifa))
         {
@@ -30,14 +35,27 @@ public class Colectivo
         {
             Tarifa = tarifa,
             SaldoRestante = tarjeta.Saldo,
-            Fecha = DateTime.Now,
+            Fecha = ahora,
+            EsTrasbordo = esTrasbordo,
             Tarjeta = tarjeta,
             Colectivo = this,
         };
+
+        tarjeta.RegistrarViaje(Linea, ahora, esTrasbordo);
 
         Contexto.Db.Boletos.Add(boleto);
         Contexto.Db.SaveChanges();
 
         return true;
+    }
+
+    // Los trasbordos se pueden realizar de lunes a sábado, de 7:00 (inclusive) a 22:00 (exclusive).
+    private static bool EsHorarioDeTrasbordo(DateTime ahora)
+    {
+        var esLunesASabado = ahora.DayOfWeek is >= DayOfWeek.Monday and <= DayOfWeek.Saturday;
+        var hora = ahora.TimeOfDay;
+        var estaDentroDelHorario = hora >= HoraInicioTrasbordo && hora < HoraFinTrasbordo;
+
+        return esLunesASabado && estaDentroDelHorario;
     }
 }

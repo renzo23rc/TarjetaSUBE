@@ -6,6 +6,7 @@ public class Boleto
     public decimal Tarifa { get; set; }
     public decimal SaldoRestante { get; set; }
     public DateTime Fecha { get; set; }
+    public bool EsTrasbordo { get; set; }
     public int TarjetaId { get; set; }
     public Tarjeta? Tarjeta { get; set; }
     public int ColectivoId { get; set; }
