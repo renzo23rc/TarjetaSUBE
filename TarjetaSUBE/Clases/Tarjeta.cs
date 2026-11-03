@@ -16,9 +16,9 @@ public class Tarjeta
         2000m, 3000m, 4000m, 5000m, 8000m, 10000m, 15000m, 20000m, 25000m, 30000m
     };
 
-    public static Tarjeta Crear()
+    public static Tarjeta Crear(TarjetaTipo? tipo = null)
     {
-        var tarjeta = new Tarjeta();
+        var tarjeta = new Tarjeta { TarjetaTipo = tipo };
 
         Contexto.Db.Tarjetas.Add(tarjeta);
         Contexto.Db.SaveChanges();
@@ -46,11 +46,6 @@ public class Tarjeta
 
     public bool Pagar(decimal tarifa)
     {
-        if (tarifa <= 0)
-        {
-            throw new ArgumentException("La tarifa debe ser mayor que cero.");
-        }
-
         if (Saldo - tarifa < SaldoMinimo)
         {
             return false;
@@ -62,6 +57,10 @@ public class Tarjeta
 
     public decimal CalcularTarifa(decimal tarifaBasica)
     {
+        TarjetaTipo ??= TarjetaTipoId is int id
+            ? Contexto.Db.TarjetaTipos.Find(id)
+            : null;
+
         return TarjetaTipo?.CalcularMonto(tarifaBasica) ?? tarifaBasica;
     }
 }
