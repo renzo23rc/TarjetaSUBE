@@ -19,7 +19,18 @@ public class Colectivo
 
     public bool PagarCon(Tarjeta tarjeta)
     {
-        var tarifa = tarjeta.CalcularTarifa(TarifaBasica);
+        tarjeta.TarjetaTipo ??= tarjeta.TarjetaTipoId is int id
+            ? Contexto.Db.TarjetaTipos.Find(id)
+            : null;
+
+        var ahora = DateTime.Now;
+
+        if (tarjeta.TarjetaTipo != null && !tarjeta.TarjetaTipo.PuedeViajar(Contexto.Db, tarjeta.Id, ahora))
+        {
+            return false;
+        }
+
+        var tarifa = tarjeta.TarjetaTipo?.CalcularTarifa(Contexto.Db, tarjeta, ahora, TarifaBasica) ?? TarifaBasica;
         var saldoPrevio = tarjeta.Saldo;
 
         if (!tarjeta.Pagar(tarifa))
@@ -38,7 +49,7 @@ public class Colectivo
             Tarifa = tarifa,
             TotalAbonado = totalAbonado,
             SaldoRestante = tarjeta.Saldo,
-            Fecha = DateTime.Now,
+            Fecha = ahora,
             TipoTarjeta = tarjeta.TarjetaTipo?.Nombre ?? "Normal",
             Linea = Linea,
             Tarjeta = tarjeta,
