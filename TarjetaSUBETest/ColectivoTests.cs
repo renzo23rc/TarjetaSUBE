@@ -241,8 +241,8 @@ public class ColectivoTests
         var tarjeta = Tarjeta.Crear(new TarjetaBoletoGratuito());
         tarjeta.CargarSaldo(10000m);
         var fecha = DateTime.Now.AddMinutes(-10);
-        _db.Boletos.Add(new Boleto { Tarifa = 0m, TotalAbonado = 0m, Saldo = 10000m, SaldoRestante = 10000m, Fecha = fecha, TipoTarjeta = "Boleto Gratuito Estudiantil", Linea = "102", TarjetaId = tarjeta.Id, Tarjeta = tarjeta });
-        _db.Boletos.Add(new Boleto { Tarifa = 0m, TotalAbonado = 0m, Saldo = 10000m, SaldoRestante = 10000m, Fecha = fecha, TipoTarjeta = "Boleto Gratuito Estudiantil", Linea = "102", TarjetaId = tarjeta.Id, Tarjeta = tarjeta });
+        _db.Boletos.Add(new Boleto { Tarifa = 0m, TotalAbonado = 0m, SaldoRestante = 10000m, Fecha = fecha, TipoTarjeta = "Boleto Gratuito Estudiantil", Linea = "102", TarjetaId = tarjeta.Id, Tarjeta = tarjeta });
+        _db.Boletos.Add(new Boleto { Tarifa = 0m, TotalAbonado = 0m, SaldoRestante = 10000m, Fecha = fecha, TipoTarjeta = "Boleto Gratuito Estudiantil", Linea = "102", TarjetaId = tarjeta.Id, Tarjeta = tarjeta });
         _db.SaveChanges();
         var colectivo = Colectivo.Crear("102");
 
