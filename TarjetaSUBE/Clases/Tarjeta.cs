@@ -4,16 +4,17 @@ public class Tarjeta
 {
     public int Id { get; set; }
     public decimal Saldo { get; private set; }
+    public decimal SaldoPendiente { get; set; }
     public int? TarjetaTipoId { get; set; }
     public TarjetaTipo? TarjetaTipo { get; set; }
 
-    public const decimal SaldoMaximo = 40000m;
+    public const decimal SaldoMaximo = 56000m;
 
     public const decimal SaldoMinimo = -2000m;
 
     public static readonly decimal[] MontosDeCarga =
     {
-        2000m, 3000m, 4000m, 5000m, 8000m, 10000m, 15000m, 20000m, 25000m, 30000m
+        2000m, 3000m, 4000m, 8000m, 5000m, 10000m, 15000m, 20000m, 25000m, 30000m
     };
 
     public static Tarjeta Crear(TarjetaTipo? tipo = null)
@@ -34,13 +35,8 @@ public class Tarjeta
                 $"El monto de carga debe ser uno de los montos aceptados: {string.Join(", ", MontosDeCarga)}.");
         }
 
-        if (Saldo + monto > SaldoMaximo)
-        {
-            throw new ArgumentException(
-                $"La carga de {monto} supera el saldo máximo permitido de {SaldoMaximo}.");
-        }
-
-        Saldo += monto;
+        SaldoPendiente += monto;
+        AcreditarCarga();
         Contexto.Db.SaveChanges();
     }
 
@@ -52,6 +48,7 @@ public class Tarjeta
         }
 
         Saldo -= tarifa;
+        AcreditarCarga();
         return true;
     }
 
@@ -62,5 +59,43 @@ public class Tarjeta
             : null;
 
         return TarjetaTipo?.CalcularMonto(tarifaBasica) ?? tarifaBasica;
+    }
+
+    public decimal AcreditarCarga()
+    {
+        if (SaldoPendiente <= 0)
+        {
+            return 0m;
+        }
+
+        var espacioDisponible = SaldoMaximo - Saldo;
+        if (espacioDisponible <= 0)
+        {
+            return 0m;
+        }
+
+        var saldoPrevio = Saldo;
+        if (SaldoPendiente <= espacioDisponible)
+        {
+            Saldo += SaldoPendiente;
+            SaldoPendiente = 0m;
+        }
+        else
+        {
+            Saldo = SaldoMaximo;
+            SaldoPendiente -= espacioDisponible;
+        }
+
+        if (saldoPrevio >= 0)
+        {
+            return 0m;
+        }
+
+        if (Saldo >= 0)
+        {
+            return decimal.Negate(saldoPrevio);
+        }
+
+        return Saldo - saldoPrevio;
     }
 }
