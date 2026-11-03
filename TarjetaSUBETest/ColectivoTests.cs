@@ -99,7 +99,7 @@ public class ColectivoTests
         Assert.That(boleto.TipoTarjeta, Is.EqualTo("Normal"));
         Assert.That(boleto.Linea, Is.EqualTo("102"));
         Assert.That(boleto.TotalAbonado, Is.EqualTo(1580m));
-        Assert.That(boleto.Saldo, Is.EqualTo(420m));
+        Assert.That(boleto.SaldoRestante, Is.EqualTo(420m));
         Assert.That(boleto.TarjetaId, Is.EqualTo(tarjeta.Id));
     }
 

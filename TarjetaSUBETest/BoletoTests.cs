@@ -38,7 +38,6 @@ public class BoletoTests
         Assert.That(boleto.Id, Is.Not.EqualTo(0));
         Assert.That(boleto.Tarifa, Is.EqualTo(Colectivo.TarifaBasica));
         Assert.That(boleto.TotalAbonado, Is.EqualTo(Colectivo.TarifaBasica));
-        Assert.That(boleto.Saldo, Is.EqualTo(420m));
         Assert.That(boleto.SaldoRestante, Is.EqualTo(420m));
         Assert.That(boleto.Fecha, Is.Not.EqualTo(default(DateTime)));
         Assert.That(boleto.TipoTarjeta, Is.EqualTo("Normal"));
@@ -55,7 +54,6 @@ public class BoletoTests
         {
             Tarifa = Colectivo.TarifaBasica,
             TotalAbonado = Colectivo.TarifaBasica,
-            Saldo = 12345m,
             SaldoRestante = 12345m,
             Fecha = fecha,
             TipoTarjeta = "Normal",
@@ -71,7 +69,6 @@ public class BoletoTests
 
         Assert.That(recuperado.Tarifa, Is.EqualTo(1580m));
         Assert.That(recuperado.TotalAbonado, Is.EqualTo(1580m));
-        Assert.That(recuperado.Saldo, Is.EqualTo(12345m));
         Assert.That(recuperado.SaldoRestante, Is.EqualTo(12345m));
         Assert.That(recuperado.Fecha, Is.EqualTo(fecha));
         Assert.That(recuperado.TipoTarjeta, Is.EqualTo("Normal"));
