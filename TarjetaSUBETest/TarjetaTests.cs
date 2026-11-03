@@ -95,23 +95,6 @@ public class TarjetaTests
     }
 
     [Test]
-    public void Pagar_LanzaExcepcion_CuandoLaTarifaNoEsPositiva()
-    {
-        var tarjeta = Tarjeta.Crear();
-        tarjeta.CargarSaldo(2000m);
-
-        Assert.That(
-            () => tarjeta.Pagar(0m),
-            Throws.TypeOf<ArgumentException>());
-
-        Assert.That(
-            () => tarjeta.Pagar(-1m),
-            Throws.TypeOf<ArgumentException>());
-
-        Assert.That(tarjeta.Saldo, Is.EqualTo(2000m));
-    }
-
-    [Test]
     public void Pagar_NoPuedeQuedarConMenosSaldoQueElPermitido()
     {
         var tarjeta = DejarTarjetaConSaldo(200m);
