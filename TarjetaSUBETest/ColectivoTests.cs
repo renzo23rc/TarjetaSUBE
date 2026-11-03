@@ -211,8 +211,8 @@ public class ColectivoTests
         {
             Assert.Inconclusive("Cruce de medianoche: la ventana de 10 minutos cambió de día.");
         }
-        _db.Boletos.Add(new Boleto { Tarifa = 790m, TotalAbonado = 790m, Saldo = 9210m, SaldoRestante = 9210m, Fecha = fecha, TipoTarjeta = "Medio Boleto Estudiantil", Linea = "102", TarjetaId = tarjeta.Id, Tarjeta = tarjeta });
-        _db.Boletos.Add(new Boleto { Tarifa = 790m, TotalAbonado = 790m, Saldo = 8420m, SaldoRestante = 8420m, Fecha = fecha, TipoTarjeta = "Medio Boleto Estudiantil", Linea = "102", TarjetaId = tarjeta.Id, Tarjeta = tarjeta });
+        _db.Boletos.Add(new Boleto { Tarifa = 790m, TotalAbonado = 790m, SaldoRestante = 9210m, Fecha = fecha, TipoTarjeta = "Medio Boleto Estudiantil", Linea = "102", TarjetaId = tarjeta.Id, Tarjeta = tarjeta });
+        _db.Boletos.Add(new Boleto { Tarifa = 790m, TotalAbonado = 790m, SaldoRestante = 8420m, Fecha = fecha, TipoTarjeta = "Medio Boleto Estudiantil", Linea = "102", TarjetaId = tarjeta.Id, Tarjeta = tarjeta });
         _db.SaveChanges();
         var colectivo = Colectivo.Crear("102");
 
