@@ -221,4 +221,33 @@ public class ColectivoTests
         Assert.That(boleto.Tarifa, Is.EqualTo(1580m));
         Assert.That(_db.Boletos.Count(b => b.Tarifa < 1580m), Is.EqualTo(2));
     }
+
+    [Test]
+    public void BoletoGratuito_PermiteDosViajesGratisPorDia()
+    {
+        var tarjeta = Tarjeta.Crear(new TarjetaBoletoGratuito());
+        tarjeta.CargarSaldo(2000m);
+        var colectivo = Colectivo.Crear("102");
+
+        Assert.That(colectivo.PagarCon(tarjeta), Is.True);
+        Assert.That(colectivo.PagarCon(tarjeta), Is.True);
+        Assert.That(_db.Boletos.Count(), Is.EqualTo(2));
+        Assert.That(_db.Boletos.All(b => b.Tarifa == 0m), Is.True);
+    }
+
+    [Test]
+    public void BoletoGratuito_ViajesPosterioresAlSegundoSeCobranConPrecioCompleto()
+    {
+        var tarjeta = Tarjeta.Crear(new TarjetaBoletoGratuito());
+        tarjeta.CargarSaldo(10000m);
+        var fecha = DateTime.Now.AddMinutes(-10);
+        _db.Boletos.Add(new Boleto { Tarifa = 0m, TotalAbonado = 0m, Saldo = 10000m, SaldoRestante = 10000m, Fecha = fecha, TipoTarjeta = "Boleto Gratuito Estudiantil", Linea = "102", TarjetaId = tarjeta.Id, Tarjeta = tarjeta });
+        _db.Boletos.Add(new Boleto { Tarifa = 0m, TotalAbonado = 0m, Saldo = 10000m, SaldoRestante = 10000m, Fecha = fecha, TipoTarjeta = "Boleto Gratuito Estudiantil", Linea = "102", TarjetaId = tarjeta.Id, Tarjeta = tarjeta });
+        _db.SaveChanges();
+        var colectivo = Colectivo.Crear("102");
+
+        Assert.That(colectivo.PagarCon(tarjeta), Is.True);
+        var boleto = _db.Boletos.OrderByDescending(b => b.Id).First();
+        Assert.That(boleto.Tarifa, Is.EqualTo(1580m));
+    }
 }
