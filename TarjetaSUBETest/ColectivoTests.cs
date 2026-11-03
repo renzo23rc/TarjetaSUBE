@@ -82,7 +82,7 @@ public class ColectivoTests
     [Test]
     public void PagarCon_ConTarjetaNormal_CobraTarifaCompleta()
     {
-        var tipo = new TarjetaTipo { Nombre = "Normal", PorcentajeDescuento = 0m };
+        var tipo = new TarjetaNormal();
         _db.TarjetaTipos.Add(tipo);
         var tarjeta = Tarjeta.Crear();
         tarjeta.CargarSaldo(2000m);
@@ -106,7 +106,7 @@ public class ColectivoTests
     [Test]
     public void PagarCon_ConMedioBoleto_CobraLaMitad()
     {
-        var tipo = new TarjetaTipo { Nombre = "Medio Boleto Estudiantil", PorcentajeDescuento = 50m };
+        var tipo = new TarjetaMedioBoleto();
         _db.TarjetaTipos.Add(tipo);
         var tarjeta = Tarjeta.Crear();
         tarjeta.CargarSaldo(5000m);
@@ -128,7 +128,7 @@ public class ColectivoTests
     [Test]
     public void PagarCon_ConBoletoGratuito_NoDescuentaSaldo()
     {
-        var tipo = new TarjetaTipo { Nombre = "Boleto Gratuito Estudiantil", PorcentajeDescuento = 100m };
+        var tipo = new TarjetaBoletoGratuito();
         _db.TarjetaTipos.Add(tipo);
         var tarjeta = Tarjeta.Crear();
         tarjeta.CargarSaldo(2000m);
@@ -148,7 +148,7 @@ public class ColectivoTests
     [Test]
     public void PagarCon_ConFranquiciaCompleta_SiemprePuedePagar()
     {
-        var tipo = new TarjetaTipo { Nombre = "Franquicia Completa", PorcentajeDescuento = 100m };
+        var tipo = new TarjetaFranquiciaCompleta();
         _db.TarjetaTipos.Add(tipo);
         var tarjeta = Tarjeta.Crear();
         tarjeta.CargarSaldo(2000m);
@@ -170,7 +170,7 @@ public class ColectivoTests
     [Test]
     public void PagarCon_ConSaldoNegativo_InformaTotalAbonado()
     {
-        var tipo = new TarjetaTipo { Nombre = "Normal", PorcentajeDescuento = 0m };
+        var tipo = new TarjetaNormal();
         _db.TarjetaTipos.Add(tipo);
         var tarjeta = Tarjeta.Crear();
         tarjeta.CargarSaldo(2000m);
