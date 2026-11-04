@@ -4,10 +4,11 @@ public class Tarjeta
 {
     public int Id { get; set; }
     public decimal Saldo { get; private set; }
+    public decimal SaldoPendiente { get; set; }
     public int? TarjetaTipoId { get; set; }
     public TarjetaTipo? TarjetaTipo { get; set; }
 
-    public const decimal SaldoMaximo = 40000m;
+    public const decimal SaldoMaximo = 56000m;
 
     public const decimal SaldoMinimo = -2000m;
 
@@ -34,13 +35,8 @@ public class Tarjeta
                 $"El monto de carga debe ser uno de los montos aceptados: {string.Join(", ", MontosDeCarga)}.");
         }
 
-        if (Saldo + monto > SaldoMaximo)
-        {
-            throw new ArgumentException(
-                $"La carga de {monto} supera el saldo máximo permitido de {SaldoMaximo}.");
-        }
-
-        Saldo += monto;
+        SaldoPendiente += monto;
+        AcreditarCarga();
         Contexto.Db.SaveChanges();
     }
 
@@ -52,6 +48,7 @@ public class Tarjeta
         }
 
         Saldo -= tarifa;
+        AcreditarCarga();
         return true;
     }
 
@@ -62,5 +59,27 @@ public class Tarjeta
             : null;
 
         return TarjetaTipo?.CalcularMonto(tarifaBasica) ?? tarifaBasica;
+    }
+
+    public decimal AcreditarCarga()
+    {
+        if (SaldoPendiente <= 0)
+        {
+            return 0m;
+        }
+
+        var espacioDisponible = SaldoMaximo - Saldo;
+        if (espacioDisponible <= 0)
+        {
+            return 0m;
+        }
+
+        var saldoPrevio = Saldo;
+        var montoAcreditado = Math.Min(SaldoPendiente, espacioDisponible);
+
+        Saldo += montoAcreditado;
+        SaldoPendiente -= montoAcreditado;
+
+        return saldoPrevio < 0 ? Math.Min(Saldo, 0m) - saldoPrevio : 0m;
     }
 }
