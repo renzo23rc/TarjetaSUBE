@@ -23,14 +23,17 @@ public class Colectivo
             ? Contexto.Db.TarjetaTipos.Find(id)
             : null;
 
-        var ahora = DateTime.Now;
+        var ahora = Contexto.Reloj.GetLocalNow().DateTime;
 
         if (tarjeta.TarjetaTipo != null && !tarjeta.TarjetaTipo.PuedeViajar(Contexto.Db, tarjeta.Id, ahora))
         {
             return false;
         }
 
-        var tarifa = tarjeta.TarjetaTipo?.CalcularTarifa(Contexto.Db, tarjeta, ahora, TarifaBasica) ?? TarifaBasica;
+        var esTrasbordo = EsTrasbordo(tarjeta.Id, ahora);
+        var tarifa = esTrasbordo
+            ? 0m
+            : tarjeta.TarjetaTipo?.CalcularTarifa(Contexto.Db, tarjeta, ahora, TarifaBasica) ?? TarifaBasica;
         var saldoPrevio = tarjeta.Saldo;
 
         if (!tarjeta.Pagar(tarifa))
@@ -52,6 +55,7 @@ public class Colectivo
             Fecha = ahora,
             TipoTarjeta = tarjeta.TarjetaTipo?.Nombre ?? "Normal",
             Linea = Linea,
+            EsTrasbordo = esTrasbordo,
             Tarjeta = tarjeta,
             Colectivo = this,
         };
@@ -60,5 +64,43 @@ public class Colectivo
         Contexto.Db.SaveChanges();
 
         return true;
+    }
+
+    // Un trasbordo es gratis dentro de la hora desde el primer boleto,
+    // solo entre líneas distintas, de lunes a sábado de 7:00 a 22:00.
+    private bool EsTrasbordo(int tarjetaId, DateTime ahora)
+    {
+        if (!EsHorarioDeTrasbordo(ahora))
+        {
+            return false;
+        }
+
+        var ultimo = Contexto.Db.Boletos
+            .Where(b => b.TarjetaId == tarjetaId)
+            .OrderByDescending(b => b.Fecha)
+            .ThenByDescending(b => b.Id)
+            .FirstOrDefault();
+
+        if (ultimo is null || ultimo.Linea == Linea)
+        {
+            return false;
+        }
+
+        var primerBoleto = Contexto.Db.Boletos
+            .Where(b => b.TarjetaId == tarjetaId && !b.EsTrasbordo)
+            .OrderByDescending(b => b.Fecha)
+            .ThenByDescending(b => b.Id)
+            .FirstOrDefault();
+
+        return primerBoleto is not null && ahora <= primerBoleto.Fecha.AddHours(1);
+    }
+
+    private static bool EsHorarioDeTrasbordo(DateTime ahora)
+    {
+        var esLunesASabado = ahora.DayOfWeek is >= DayOfWeek.Monday and <= DayOfWeek.Saturday;
+        var hora = ahora.TimeOfDay;
+        var estaDentroDelHorario = hora >= TimeSpan.FromHours(7) && hora < TimeSpan.FromHours(22);
+
+        return esLunesASabado && estaDentroDelHorario;
     }
 }
