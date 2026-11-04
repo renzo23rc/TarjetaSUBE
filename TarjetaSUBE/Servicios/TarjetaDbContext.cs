@@ -37,18 +37,22 @@ public class TarjetaDbContext : DbContext
         modelBuilder.Entity<TarjetaBoletoGratuito>().HasData(new TarjetaBoletoGratuito { Id = 3 });
         modelBuilder.Entity<TarjetaFranquiciaCompleta>().HasData(new TarjetaFranquiciaCompleta { Id = 4 });
 
-        modelBuilder.Entity<Boleto>()
-            .Property(b => b.Tarifa)
-            .HasPrecision(18, 2);
-
-        modelBuilder.Entity<Boleto>()
-            .Property(b => b.SaldoRestante)
-            .HasPrecision(18, 2);
-
         modelBuilder.Entity<TarjetaTipo>().UseTphMappingStrategy();
         modelBuilder.Entity<TarjetaNormal>();
         modelBuilder.Entity<TarjetaMedioBoleto>();
         modelBuilder.Entity<TarjetaBoletoGratuito>();
         modelBuilder.Entity<TarjetaFranquiciaCompleta>();
+
+        modelBuilder.Entity<Boleto>()
+            .Property(b => b.Tarifa)
+            .HasPrecision(18, 2);
+
+        modelBuilder.Entity<Boleto>()
+            .Property(b => b.TotalAbonado)
+            .HasPrecision(18, 2);
+
+        modelBuilder.Entity<Boleto>()
+            .Property(b => b.SaldoRestante)
+            .HasPrecision(18, 2);
     }
 }

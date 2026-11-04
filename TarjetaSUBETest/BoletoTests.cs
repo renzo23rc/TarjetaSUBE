@@ -37,8 +37,11 @@ public class BoletoTests
 
         Assert.That(boleto.Id, Is.Not.EqualTo(0));
         Assert.That(boleto.Tarifa, Is.EqualTo(Colectivo.TarifaBasica));
+        Assert.That(boleto.TotalAbonado, Is.EqualTo(Colectivo.TarifaBasica));
         Assert.That(boleto.SaldoRestante, Is.EqualTo(420m));
         Assert.That(boleto.Fecha, Is.Not.EqualTo(default(DateTime)));
+        Assert.That(boleto.TipoTarjeta, Is.EqualTo("Normal"));
+        Assert.That(boleto.Linea, Is.EqualTo("102"));
         Assert.That(boleto.TarjetaId, Is.EqualTo(tarjeta.Id));
         Assert.That(boleto.ColectivoId, Is.EqualTo(colectivo.Id));
     }
@@ -50,8 +53,11 @@ public class BoletoTests
         var boleto = new Boleto
         {
             Tarifa = Colectivo.TarifaBasica,
+            TotalAbonado = Colectivo.TarifaBasica,
             SaldoRestante = 12345m,
             Fecha = fecha,
+            TipoTarjeta = "Normal",
+            Linea = "102",
         };
 
         _db.Boletos.Add(boleto);
@@ -62,7 +68,10 @@ public class BoletoTests
         var recuperado = _db.Boletos.AsNoTracking().Single(b => b.Id == boleto.Id);
 
         Assert.That(recuperado.Tarifa, Is.EqualTo(1580m));
+        Assert.That(recuperado.TotalAbonado, Is.EqualTo(1580m));
         Assert.That(recuperado.SaldoRestante, Is.EqualTo(12345m));
         Assert.That(recuperado.Fecha, Is.EqualTo(fecha));
+        Assert.That(recuperado.TipoTarjeta, Is.EqualTo("Normal"));
+        Assert.That(recuperado.Linea, Is.EqualTo("102"));
     }
 }

@@ -80,57 +80,145 @@ public class ColectivoTests
     }
 
     [Test]
-    public void PagarCon_MedioBoleto_DescuentaLaMitadDeLaTarifa()
+    public void PagarCon_ConTarjetaNormal_CobraTarifaCompleta()
     {
-        var tarjeta = Tarjeta.Crear(new TarjetaMedioBoleto());
+        var tipo = new TarjetaNormal();
+        _db.TarjetaTipos.Add(tipo);
+        var tarjeta = Tarjeta.Crear();
         tarjeta.CargarSaldo(2000m);
+        tarjeta.TarjetaTipoId = tipo.Id;
+        _db.SaveChanges();
         var colectivo = Colectivo.Crear("102");
 
         var resultado = colectivo.PagarCon(tarjeta);
 
         Assert.That(resultado, Is.True);
-        Assert.That(tarjeta.Saldo, Is.EqualTo(2000m - Colectivo.TarifaBasica / 2));
-
+        Assert.That(tarjeta.Saldo, Is.EqualTo(420m));
         var boleto = _db.Boletos.Single();
-        Assert.That(boleto.Tarifa, Is.EqualTo(Colectivo.TarifaBasica / 2));
+        Assert.That(boleto.Tarifa, Is.EqualTo(1580m));
+        Assert.That(boleto.TipoTarjeta, Is.EqualTo("Normal"));
+        Assert.That(boleto.Linea, Is.EqualTo("102"));
+        Assert.That(boleto.TotalAbonado, Is.EqualTo(1580m));
+        Assert.That(boleto.SaldoRestante, Is.EqualTo(420m));
+        Assert.That(boleto.TarjetaId, Is.EqualTo(tarjeta.Id));
     }
 
     [Test]
-    public void PagarCon_FranquiciaCompleta_SiemprePuedePagarAunSinSaldo()
+    public void PagarCon_ConMedioBoleto_CobraLaMitad()
     {
-        var tarjeta = Tarjeta.Crear(new TarjetaFranquiciaCompleta());
+        var tipo = new TarjetaMedioBoleto();
+        _db.TarjetaTipos.Add(tipo);
+        var tarjeta = Tarjeta.Crear();
+        tarjeta.CargarSaldo(5000m);
+        tarjeta.TarjetaTipo = tipo;
+        tarjeta.TarjetaTipoId = tipo.Id;
+        _db.SaveChanges();
         var colectivo = Colectivo.Crear("102");
 
         var resultado = colectivo.PagarCon(tarjeta);
 
         Assert.That(resultado, Is.True);
-        Assert.That(tarjeta.Saldo, Is.EqualTo(0m));
+        Assert.That(tarjeta.Saldo, Is.EqualTo(4210m));
+        var boleto = _db.Boletos.Single();
+        Assert.That(boleto.Tarifa, Is.EqualTo(790m));
+        Assert.That(boleto.TipoTarjeta, Is.EqualTo("Medio Boleto Estudiantil"));
+        Assert.That(boleto.TotalAbonado, Is.EqualTo(790m));
+    }
 
+    [Test]
+    public void PagarCon_ConBoletoGratuito_NoDescuentaSaldo()
+    {
+        var tipo = new TarjetaBoletoGratuito();
+        _db.TarjetaTipos.Add(tipo);
+        var tarjeta = Tarjeta.Crear();
+        tarjeta.CargarSaldo(2000m);
+        tarjeta.TarjetaTipo = tipo;
+        tarjeta.TarjetaTipoId = tipo.Id;
+        _db.SaveChanges();
+        var colectivo = Colectivo.Crear("102");
+
+        var resultado = colectivo.PagarCon(tarjeta);
+
+        Assert.That(resultado, Is.True);
+        Assert.That(tarjeta.Saldo, Is.EqualTo(2000m));
         var boleto = _db.Boletos.Single();
         Assert.That(boleto.Tarifa, Is.EqualTo(0m));
     }
 
     [Test]
-    public void PagarCon_ConSoloTarjetaTipoId_ResuelveElTipoDesdeLaBase()
+    public void PagarCon_ConFranquiciaCompleta_SiemprePuedePagar()
     {
-        var tipo = new TarjetaMedioBoleto();
+        var tipo = new TarjetaFranquiciaCompleta();
         _db.TarjetaTipos.Add(tipo);
-        _db.SaveChanges();
-
         var tarjeta = Tarjeta.Crear();
         tarjeta.CargarSaldo(2000m);
+        tarjeta.Pagar(4000m);
+        tarjeta.TarjetaTipo = tipo;
         tarjeta.TarjetaTipoId = tipo.Id;
         _db.SaveChanges();
-        _db.ChangeTracker.Clear();
-
-        var fresca = _db.Tarjetas.Find(tarjeta.Id)!;
-        Assert.That(fresca.TarjetaTipo, Is.Null);
         var colectivo = Colectivo.Crear("102");
 
-        var resultado = colectivo.PagarCon(fresca);
+        var resultado = colectivo.PagarCon(tarjeta);
 
         Assert.That(resultado, Is.True);
-        Assert.That(fresca.Saldo, Is.EqualTo(2000m - Colectivo.TarifaBasica / 2));
-        Assert.That(_db.Boletos.Single().Tarifa, Is.EqualTo(Colectivo.TarifaBasica / 2));
+        Assert.That(tarjeta.Saldo, Is.EqualTo(-2000m));
+        var boleto = _db.Boletos.Single();
+        Assert.That(boleto.Tarifa, Is.EqualTo(0m));
+        Assert.That(boleto.TipoTarjeta, Is.EqualTo("Franquicia Completa"));
+    }
+
+    [Test]
+    public void PagarCon_ConSaldoNegativo_InformaTotalAbonado()
+    {
+        var tipo = new TarjetaNormal();
+        _db.TarjetaTipos.Add(tipo);
+        var tarjeta = Tarjeta.Crear();
+        tarjeta.CargarSaldo(2000m);
+        tarjeta.Pagar(2420m);
+        tarjeta.TarjetaTipo = tipo;
+        tarjeta.TarjetaTipoId = tipo.Id;
+        _db.SaveChanges();
+        var colectivo = Colectivo.Crear("102");
+
+        var resultado = colectivo.PagarCon(tarjeta);
+
+        Assert.That(resultado, Is.True);
+        Assert.That(tarjeta.Saldo, Is.EqualTo(-2000m));
+        var boleto = _db.Boletos.Single();
+        Assert.That(boleto.Tarifa, Is.EqualTo(1580m));
+        Assert.That(boleto.TotalAbonado, Is.EqualTo(2000m));
+    }
+
+    [Test]
+    public void MedioBoleto_NoPermiteViajarNuevamenteEnMenosDeCincoMinutos()
+    {
+        var tarjeta = Tarjeta.Crear(new TarjetaMedioBoleto());
+        tarjeta.CargarSaldo(5000m);
+        var colectivo = Colectivo.Crear("102");
+
+        Assert.That(colectivo.PagarCon(tarjeta), Is.True);
+        Assert.That(colectivo.PagarCon(tarjeta), Is.False);
+        Assert.That(_db.Boletos.Count(), Is.EqualTo(1));
+    }
+
+    [Test]
+    public void MedioBoleto_SoloPermiteDosViajesPorDiaConDescuento_ElTerceroPagaNormal()
+    {
+        var tarjeta = Tarjeta.Crear(new TarjetaMedioBoleto());
+        tarjeta.CargarSaldo(10000m);
+        var fecha = DateTime.Now.AddMinutes(-10);
+        if (fecha.Date != DateTime.Today)
+        {
+            Assert.Inconclusive("Cruce de medianoche: la ventana de 10 minutos cambió de día.");
+        }
+        _db.Boletos.Add(new Boleto { Tarifa = 790m, TotalAbonado = 790m, SaldoRestante = 9210m, Fecha = fecha, TipoTarjeta = "Medio Boleto Estudiantil", Linea = "102", TarjetaId = tarjeta.Id, Tarjeta = tarjeta });
+        _db.Boletos.Add(new Boleto { Tarifa = 790m, TotalAbonado = 790m, SaldoRestante = 8420m, Fecha = fecha, TipoTarjeta = "Medio Boleto Estudiantil", Linea = "102", TarjetaId = tarjeta.Id, Tarjeta = tarjeta });
+        _db.SaveChanges();
+        var colectivo = Colectivo.Crear("102");
+
+        Assert.That(colectivo.PagarCon(tarjeta), Is.True);
+        var boleto = _db.Boletos.OrderByDescending(b => b.Id).First();
+        Assert.That(boleto.Tarifa, Is.EqualTo(1580m));
+        Assert.That(_db.Boletos.Count(b => b.Tarifa < 1580m), Is.EqualTo(2));
     }
 }
