@@ -43,9 +43,11 @@ public class Colectivo
         }
 
         var esTrasbordo = EsTrasbordo(tarjeta.Id, ahora);
+        // Una tarjeta sin tipo se trata como Normal (incluye el descuento de uso frecuente).
+        var tipo = tarjeta.TarjetaTipo ?? new TarjetaNormal();
         var tarifa = esTrasbordo
             ? 0m
-            : tarjeta.TarjetaTipo?.CalcularTarifa(Contexto.Db, tarjeta, ahora, Tarifa) ?? Tarifa;
+            : tipo.CalcularTarifa(Contexto.Db, tarjeta, ahora, Tarifa);
         var saldoPrevio = tarjeta.Saldo;
 
         if (!tarjeta.Pagar(tarifa))

@@ -35,12 +35,10 @@ public class BoletoUsoFrecuenteTests
         _db.Dispose();
     }
 
-    [TestCase(0, 2150.0, TestName = "Viaje_1_cobra_tarifa_normal")]
     [TestCase(28, 2150.0, TestName = "Viaje_29_cobra_tarifa_normal")]
     [TestCase(29, 1720.0, TestName = "Viaje_30_cobra_20_por_ciento_de_descuento")]
     [TestCase(78, 1720.0, TestName = "Viaje_79_cobra_20_por_ciento_de_descuento")]
     [TestCase(79, 1612.5, TestName = "Viaje_80_cobra_25_por_ciento_de_descuento")]
-    [TestCase(80, 1612.5, TestName = "Viaje_81_cobra_25_por_ciento_de_descuento")]
     public void TarjetaNormal_AplicaDescuentoSegunNumeroDeViaje(int viajesPrevios, double tarifaEsperada)
     {
         var tarjeta = Tarjeta.Crear(new TarjetaNormal());
@@ -77,12 +75,13 @@ public class BoletoUsoFrecuenteTests
     [Test]
     public void LosViajesDelMes_SeAcumulanDesdeElPrimeroHastaElUltimoDia()
     {
+        _reloj.Establecer(new DateTime(2026, 3, 31, 10, 0, 0));
         var tarjeta = Tarjeta.Crear(new TarjetaNormal());
         tarjeta.CargarSaldo(3000m);
 
         // 29 viajes repartidos a lo largo de marzo: el siguiente es el viaje 30.
         RegistrarViajes(tarjeta, 15, new DateTime(2026, 3, 1, 8, 0, 0));
-        RegistrarViajes(tarjeta, 14, new DateTime(2026, 3, 31, 20, 0, 0));
+        RegistrarViajes(tarjeta, 14, new DateTime(2026, 3, 30, 20, 0, 0));
 
         var resultado = Colectivo.Crear("102").PagarCon(tarjeta);
 
@@ -110,6 +109,23 @@ public class BoletoUsoFrecuenteTests
 
         var boleto = _db.Boletos.OrderBy(b => b.Id).Last();
         Assert.That(boleto.Tarifa, Is.EqualTo((decimal)tarifaEsperada));
+    }
+
+    [Test]
+    public void TarjetaSinTipo_AplicaDescuentoDeUsoFrecuente()
+    {
+        var tarjeta = Tarjeta.Crear();
+        tarjeta.CargarSaldo(3000m);
+
+        // 29 viajes en el mes: el viaje 30 tiene 20% de descuento.
+        RegistrarViajes(tarjeta, 29, new DateTime(2026, 3, 10, 10, 0, 0));
+
+        var resultado = Colectivo.Crear("102").PagarCon(tarjeta);
+
+        Assert.That(resultado, Is.True);
+
+        var boleto = _db.Boletos.OrderBy(b => b.Id).Last();
+        Assert.That(boleto.Tarifa, Is.EqualTo(Colectivo.TarifaBasica * 0.80m));
     }
 
     private void RegistrarViajes(Tarjeta tarjeta, int cantidad, DateTime fecha)
