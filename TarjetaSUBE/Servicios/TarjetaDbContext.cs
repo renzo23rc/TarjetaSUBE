@@ -54,5 +54,9 @@ public class TarjetaDbContext : DbContext
         modelBuilder.Entity<Boleto>()
             .Property(b => b.SaldoRestante)
             .HasPrecision(18, 2);
+
+        modelBuilder.Entity<Colectivo>()
+            .Property(c => c.Tarifa)
+            .HasPrecision(18, 2);
     }
 }

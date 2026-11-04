@@ -4,12 +4,24 @@ public class Colectivo
 {
     public int Id { get; set; }
     public string Linea { get; set; } = string.Empty;
+    public decimal Tarifa { get; set; } = TarifaBasica;
 
     public const decimal TarifaBasica = 2150m;
+    public const decimal TarifaInterurbana = 3000m;
 
     public static Colectivo Crear(string linea)
     {
         var colectivo = new Colectivo { Linea = linea };
+
+        Contexto.Db.Colectivos.Add(colectivo);
+        Contexto.Db.SaveChanges();
+
+        return colectivo;
+    }
+
+    public static Colectivo CrearInterurbano(string linea)
+    {
+        var colectivo = new Colectivo { Linea = linea, Tarifa = TarifaInterurbana };
 
         Contexto.Db.Colectivos.Add(colectivo);
         Contexto.Db.SaveChanges();
@@ -33,7 +45,7 @@ public class Colectivo
         var esTrasbordo = EsTrasbordo(tarjeta.Id, ahora);
         var tarifa = esTrasbordo
             ? 0m
-            : tarjeta.TarjetaTipo?.CalcularTarifa(Contexto.Db, tarjeta, ahora, TarifaBasica) ?? TarifaBasica;
+            : tarjeta.TarjetaTipo?.CalcularTarifa(Contexto.Db, tarjeta, ahora, Tarifa) ?? Tarifa;
         var saldoPrevio = tarjeta.Saldo;
 
         if (!tarjeta.Pagar(tarifa))
