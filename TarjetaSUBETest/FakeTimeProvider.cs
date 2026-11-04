@@ -13,6 +13,8 @@ public sealed class FakeTimeProvider : TimeProvider
         _ahora = DateTime.SpecifyKind(ahora, DateTimeKind.Unspecified);
     }
 
+    public DateTime Ahora => _ahora;
+
     public override DateTimeOffset GetUtcNow()
     {
         return new DateTimeOffset(_ahora, TimeSpan.Zero);

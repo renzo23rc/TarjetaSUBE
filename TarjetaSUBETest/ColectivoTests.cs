@@ -6,6 +6,7 @@ namespace TarjetaSUBETest;
 public class ColectivoTests
 {
     private TarjetaDbContext _db = null!;
+    private FakeTimeProvider _reloj = null!;
 
     [SetUp]
     public void Setup()
@@ -16,11 +17,16 @@ public class ColectivoTests
 
         _db = new TarjetaDbContext(opciones);
         Contexto.Db = _db;
+
+        // Lunes 16/03/2026 10:00 (dentro de la franja de las franquicias).
+        _reloj = new FakeTimeProvider(new DateTime(2026, 3, 16, 10, 0, 0));
+        Contexto.Reloj = _reloj;
     }
 
     [TearDown]
     public void TearDown()
     {
+        Contexto.Reloj = TimeProvider.System;
         _db.Dispose();
     }
 
@@ -222,11 +228,7 @@ public class ColectivoTests
     {
         var tarjeta = Tarjeta.Crear(new TarjetaMedioBoleto());
         tarjeta.CargarSaldo(10000m);
-        var fecha = DateTime.Now.AddMinutes(-10);
-        if (fecha.Date != DateTime.Today)
-        {
-            Assert.Inconclusive("Cruce de medianoche: la ventana de 10 minutos cambió de día.");
-        }
+        var fecha = _reloj.Ahora.AddMinutes(-10);
         _db.Boletos.Add(new Boleto { Tarifa = 1075m, TotalAbonado = 1075m, SaldoRestante = 8925m, Fecha = fecha, TipoTarjeta = "Medio Boleto Estudiantil", Linea = "102", TarjetaId = tarjeta.Id, Tarjeta = tarjeta });
         _db.Boletos.Add(new Boleto { Tarifa = 1075m, TotalAbonado = 1075m, SaldoRestante = 7850m, Fecha = fecha, TipoTarjeta = "Medio Boleto Estudiantil", Linea = "102", TarjetaId = tarjeta.Id, Tarjeta = tarjeta });
         _db.SaveChanges();
@@ -256,7 +258,7 @@ public class ColectivoTests
     {
         var tarjeta = Tarjeta.Crear(new TarjetaBoletoGratuito());
         tarjeta.CargarSaldo(10000m);
-        var fecha = DateTime.Now.AddMinutes(-10);
+        var fecha = _reloj.Ahora.AddMinutes(-10);
         _db.Boletos.Add(new Boleto { Tarifa = 0m, TotalAbonado = 0m, SaldoRestante = 10000m, Fecha = fecha, TipoTarjeta = "Boleto Gratuito Estudiantil", Linea = "102", TarjetaId = tarjeta.Id, Tarjeta = tarjeta });
         _db.Boletos.Add(new Boleto { Tarifa = 0m, TotalAbonado = 0m, SaldoRestante = 10000m, Fecha = fecha, TipoTarjeta = "Boleto Gratuito Estudiantil", Linea = "102", TarjetaId = tarjeta.Id, Tarjeta = tarjeta });
         _db.SaveChanges();

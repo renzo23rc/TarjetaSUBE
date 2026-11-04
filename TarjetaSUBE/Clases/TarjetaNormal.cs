@@ -7,6 +7,8 @@ public class TarjetaNormal : TarjetaTipo
         Nombre = "Normal";
     }
 
+    public override bool EsFranquicia => false;
+
     public override decimal CalcularMonto(decimal tarifaBasica)
     {
         return tarifaBasica;
