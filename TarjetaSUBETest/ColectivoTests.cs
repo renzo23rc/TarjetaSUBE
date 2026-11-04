@@ -58,7 +58,7 @@ public class ColectivoTests
 
         var boletos = _db.Boletos.ToList();
         Assert.That(boletos, Has.Count.EqualTo(1));
-        Assert.That(boletos[0].Tarifa, Is.EqualTo(1580m));
+        Assert.That(boletos[0].Tarifa, Is.EqualTo(2150m));
         Assert.That(boletos[0].SaldoRestante, Is.EqualTo(420m));
     }
 
@@ -95,10 +95,10 @@ public class ColectivoTests
         Assert.That(resultado, Is.True);
         Assert.That(tarjeta.Saldo, Is.EqualTo(420m));
         var boleto = _db.Boletos.Single();
-        Assert.That(boleto.Tarifa, Is.EqualTo(1580m));
+        Assert.That(boleto.Tarifa, Is.EqualTo(2150m));
         Assert.That(boleto.TipoTarjeta, Is.EqualTo("Normal"));
         Assert.That(boleto.Linea, Is.EqualTo("102"));
-        Assert.That(boleto.TotalAbonado, Is.EqualTo(1580m));
+        Assert.That(boleto.TotalAbonado, Is.EqualTo(2150m));
         Assert.That(boleto.SaldoRestante, Is.EqualTo(420m));
         Assert.That(boleto.TarjetaId, Is.EqualTo(tarjeta.Id));
     }
@@ -185,7 +185,7 @@ public class ColectivoTests
         Assert.That(resultado, Is.True);
         Assert.That(tarjeta.Saldo, Is.EqualTo(-2000m));
         var boleto = _db.Boletos.Single();
-        Assert.That(boleto.Tarifa, Is.EqualTo(1580m));
+        Assert.That(boleto.Tarifa, Is.EqualTo(2150m));
         Assert.That(boleto.TotalAbonado, Is.EqualTo(2000m));
     }
 
@@ -218,8 +218,8 @@ public class ColectivoTests
 
         Assert.That(colectivo.PagarCon(tarjeta), Is.True);
         var boleto = _db.Boletos.OrderByDescending(b => b.Id).First();
-        Assert.That(boleto.Tarifa, Is.EqualTo(1580m));
-        Assert.That(_db.Boletos.Count(b => b.Tarifa < 1580m), Is.EqualTo(2));
+        Assert.That(boleto.Tarifa, Is.EqualTo(2150m));
+        Assert.That(_db.Boletos.Count(b => b.Tarifa < 2150m), Is.EqualTo(2));
     }
 
     [Test]
@@ -248,6 +248,6 @@ public class ColectivoTests
 
         Assert.That(colectivo.PagarCon(tarjeta), Is.True);
         var boleto = _db.Boletos.OrderByDescending(b => b.Id).First();
-        Assert.That(boleto.Tarifa, Is.EqualTo(1580m));
+        Assert.That(boleto.Tarifa, Is.EqualTo(2150m));
     }
 }

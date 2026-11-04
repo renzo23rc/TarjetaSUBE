@@ -86,7 +86,7 @@ public class TarjetaTests
         Assert.That(tarjeta.Saldo, Is.EqualTo(56000m));
         Assert.That(tarjeta.SaldoPendiente, Is.EqualTo(4000m));
 
-        Assert.That(tarjeta.Pagar(1580m), Is.True);
+        Assert.That(tarjeta.Pagar(2150m), Is.True);
 
         Assert.That(tarjeta.Saldo, Is.EqualTo(56000m));
         Assert.That(tarjeta.SaldoPendiente, Is.EqualTo(2420m));

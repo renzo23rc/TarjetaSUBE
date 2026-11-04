@@ -5,7 +5,7 @@ public class Colectivo
     public int Id { get; set; }
     public string Linea { get; set; } = string.Empty;
 
-    public const decimal TarifaBasica = 1580m;
+    public const decimal TarifaBasica = 2150m;
 
     public static Colectivo Crear(string linea)
     {

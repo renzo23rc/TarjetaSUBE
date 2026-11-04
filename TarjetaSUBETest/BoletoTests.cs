@@ -67,8 +67,8 @@ public class BoletoTests
 
         var recuperado = _db.Boletos.AsNoTracking().Single(b => b.Id == boleto.Id);
 
-        Assert.That(recuperado.Tarifa, Is.EqualTo(1580m));
-        Assert.That(recuperado.TotalAbonado, Is.EqualTo(1580m));
+        Assert.That(recuperado.Tarifa, Is.EqualTo(2150m));
+        Assert.That(recuperado.TotalAbonado, Is.EqualTo(2150m));
         Assert.That(recuperado.SaldoRestante, Is.EqualTo(12345m));
         Assert.That(recuperado.Fecha, Is.EqualTo(fecha));
         Assert.That(recuperado.TipoTarjeta, Is.EqualTo("Normal"));
