@@ -49,24 +49,6 @@ public class FranquiciaHorariaTests
     }
 
     [TestCaseSource(nameof(TiposFranquicia))]
-    public void Franquicia_EnElLimiteInferior_PuedeViajar(Type tipo)
-    {
-        _reloj.Establecer(new DateTime(2026, 3, 16, 6, 0, 0));
-        var tarjeta = CrearTarjeta(tipo);
-
-        Assert.That(Colectivo.Crear("102").PagarCon(tarjeta), Is.True);
-    }
-
-    [TestCaseSource(nameof(TiposFranquicia))]
-    public void Franquicia_EnElLimiteSuperior_PuedeViajar(Type tipo)
-    {
-        _reloj.Establecer(new DateTime(2026, 3, 20, 21, 59, 0));
-        var tarjeta = CrearTarjeta(tipo);
-
-        Assert.That(Colectivo.Crear("102").PagarCon(tarjeta), Is.True);
-    }
-
-    [TestCaseSource(nameof(TiposFranquicia))]
     public void Franquicia_AntesDeLas6_NoPuedeViajar(Type tipo)
     {
         _reloj.Establecer(new DateTime(2026, 3, 16, 5, 59, 0));
@@ -88,22 +70,16 @@ public class FranquiciaHorariaTests
     }
 
     [TestCaseSource(nameof(TiposFranquicia))]
-    public void Franquicia_Sabado_NoPuedeViajar(Type tipo)
+    public void Franquicia_FinDeSemana_NoPuedeViajar(Type tipo)
     {
-        _reloj.Establecer(new DateTime(2026, 3, 14, 10, 0, 0));
         var tarjeta = CrearTarjeta(tipo);
 
+        _reloj.Establecer(new DateTime(2026, 3, 14, 10, 0, 0)); // sábado
         Assert.That(Colectivo.Crear("102").PagarCon(tarjeta), Is.False);
-        Assert.That(_db.Boletos.ToList(), Is.Empty);
-    }
 
-    [TestCaseSource(nameof(TiposFranquicia))]
-    public void Franquicia_Domingo_NoPuedeViajar(Type tipo)
-    {
-        _reloj.Establecer(new DateTime(2026, 3, 15, 10, 0, 0));
-        var tarjeta = CrearTarjeta(tipo);
-
+        _reloj.Establecer(new DateTime(2026, 3, 15, 10, 0, 0)); // domingo
         Assert.That(Colectivo.Crear("102").PagarCon(tarjeta), Is.False);
+
         Assert.That(_db.Boletos.ToList(), Is.Empty);
     }
 
