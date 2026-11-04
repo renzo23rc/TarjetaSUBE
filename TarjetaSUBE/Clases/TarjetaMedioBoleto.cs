@@ -14,6 +14,11 @@ public class TarjetaMedioBoleto : TarjetaTipo
 
     public override bool PuedeViajar(TarjetaDbContext context, int tarjetaId, DateTime ahora)
     {
+        if (!base.PuedeViajar(context, tarjetaId, ahora))
+        {
+            return false;
+        }
+
         var ultimo = context.Boletos
             .Where(b => b.TarjetaId == tarjetaId)
             .OrderByDescending(b => b.Fecha)
