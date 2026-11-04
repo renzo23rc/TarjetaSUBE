@@ -89,7 +89,7 @@ public class TarjetaTests
         Assert.That(tarjeta.Pagar(2150m), Is.True);
 
         Assert.That(tarjeta.Saldo, Is.EqualTo(56000m));
-        Assert.That(tarjeta.SaldoPendiente, Is.EqualTo(2420m));
+        Assert.That(tarjeta.SaldoPendiente, Is.EqualTo(1850m));
     }
 
     [Test]
@@ -140,12 +140,12 @@ public class TarjetaTests
     public void Pagar_DescuentaLaTarifa()
     {
         var tarjeta = Tarjeta.Crear();
-        tarjeta.CargarSaldo(2000m);
+        tarjeta.CargarSaldo(3000m);
 
         var resultado = tarjeta.Pagar(Colectivo.TarifaBasica);
 
         Assert.That(resultado, Is.True);
-        Assert.That(tarjeta.Saldo, Is.EqualTo(420m));
+        Assert.That(tarjeta.Saldo, Is.EqualTo(850m));
     }
 
     [Test]
