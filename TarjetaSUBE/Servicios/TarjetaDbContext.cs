@@ -27,6 +27,10 @@ public class TarjetaDbContext : DbContext
             .Property(t => t.Saldo)
             .HasPrecision(18, 2);
 
+        modelBuilder.Entity<TarjetaTipo>()
+            .Property(t => t.PorcentajeDescuento)
+            .HasPrecision(5, 2);
+
         modelBuilder.Entity<Tarjeta>()
             .HasOne(t => t.TarjetaTipo)
             .WithMany()

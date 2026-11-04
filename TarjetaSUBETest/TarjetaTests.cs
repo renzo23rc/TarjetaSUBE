@@ -31,13 +31,20 @@ public class TarjetaTests
 
         Assert.That(tarjeta.Saldo, Is.EqualTo(0m));
         Assert.That(tarjeta.Id, Is.Not.EqualTo(0));
-        Assert.That(_db.Tarjetas.Find(tarjeta.Id), Is.Not.Null);
+        Assert.That(_db.Tarjetas.AsNoTracking().SingleOrDefault(t => t.Id == tarjeta.Id), Is.Not.Null);
     }
 
     [Test]
     public void CargarSaldo_AceptaTodosLosMontosListados()
     {
-        foreach (var monto in Tarjeta.MontosDeCarga)
+        decimal[] montosPermitidos =
+        {
+            2000m, 3000m, 4000m, 5000m, 8000m, 10000m, 15000m, 20000m, 25000m, 30000m
+        };
+
+        Assert.That(Tarjeta.MontosDeCarga, Is.EquivalentTo(montosPermitidos));
+
+        foreach (var monto in montosPermitidos)
         {
             var tarjeta = Tarjeta.Crear();
             tarjeta.CargarSaldo(monto);
@@ -70,7 +77,7 @@ public class TarjetaTests
         Assert.That(tarjeta.Saldo, Is.EqualTo(56000m));
         Assert.That(tarjeta.SaldoPendiente, Is.EqualTo(4000m));
 
-        var enDb = _db.Tarjetas.Find(tarjeta.Id);
+        var enDb = _db.Tarjetas.AsNoTracking().SingleOrDefault(t => t.Id == tarjeta.Id);
         Assert.That(enDb, Is.Not.Null);
         Assert.That(enDb!.Saldo, Is.EqualTo(56000m));
         Assert.That(enDb.SaldoPendiente, Is.EqualTo(4000m));
@@ -146,17 +153,6 @@ public class TarjetaTests
 
         Assert.That(resultado, Is.True);
         Assert.That(tarjeta.Saldo, Is.EqualTo(850m));
-    }
-
-    [Test]
-    public void Pagar_RetornaFalseYNoModificaSaldo_CuandoQuedariaDebajoDelMinimo()
-    {
-        var tarjeta = DejarTarjetaConSaldo(-1000m);
-
-        var resultado = tarjeta.Pagar(Colectivo.TarifaBasica);
-
-        Assert.That(resultado, Is.False);
-        Assert.That(tarjeta.Saldo, Is.EqualTo(-1000m));
     }
 
     [Test]

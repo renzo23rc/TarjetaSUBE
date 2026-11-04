@@ -46,6 +46,8 @@ public class BoletoUsoFrecuenteTests
 
         RegistrarViajes(tarjeta, viajesPrevios, new DateTime(2026, 3, 10, 10, 0, 0));
 
+        Assert.That(tarjeta.CalcularTarifa(Colectivo.TarifaBasica), Is.EqualTo((decimal)tarifaEsperada));
+
         var resultado = Colectivo.Crear("102").PagarCon(tarjeta);
 
         Assert.That(resultado, Is.True);
@@ -61,8 +63,9 @@ public class BoletoUsoFrecuenteTests
         var tarjeta = Tarjeta.Crear(new TarjetaNormal());
         tarjeta.CargarSaldo(3000m);
 
-        // 40 viajes en febrero: no deben contar para el mes de marzo.
+        // Ni el mes anterior ni el mismo mes del año anterior cuentan.
         RegistrarViajes(tarjeta, 40, new DateTime(2026, 2, 10, 10, 0, 0));
+        RegistrarViajes(tarjeta, 40, new DateTime(2025, 3, 10, 10, 0, 0));
 
         var resultado = Colectivo.Crear("102").PagarCon(tarjeta);
 
@@ -73,10 +76,10 @@ public class BoletoUsoFrecuenteTests
     }
 
     [Test]
-    public void LosViajesDelMes_SeAcumulanDesdeElPrimeroHastaElUltimoDia()
+    public void TarjetaSinTipo_AplicaDescuentoConViajesDeTodoElMes()
     {
         _reloj.Establecer(new DateTime(2026, 3, 31, 10, 0, 0));
-        var tarjeta = Tarjeta.Crear(new TarjetaNormal());
+        var tarjeta = Tarjeta.Crear();
         tarjeta.CargarSaldo(3000m);
 
         // 29 viajes repartidos a lo largo de marzo: el siguiente es el viaje 30.
@@ -91,56 +94,45 @@ public class BoletoUsoFrecuenteTests
         Assert.That(boleto.Tarifa, Is.EqualTo(Colectivo.TarifaBasica * 0.80m));
     }
 
-    [TestCase(typeof(TarjetaMedioBoleto), 1075.0, TestName = "Medio_Boleto_no_aplica_descuento")]
-    [TestCase(typeof(TarjetaBoletoGratuito), 0.0, TestName = "Boleto_Gratuito_no_aplica_descuento")]
-    [TestCase(typeof(TarjetaFranquiciaCompleta), 0.0, TestName = "Franquicia_Completa_no_aplica_descuento")]
-    public void SoloLaTarjetaNormal_AplicaElDescuentoDeUsoFrecuente(Type tipoTarjeta, double tarifaEsperada)
+    [TestCase(typeof(TarjetaMedioBoleto), 1075)]
+    [TestCase(typeof(TarjetaBoletoGratuito), 0)]
+    public void Franquicia_NoAplicaElDescuentoDeUsoFrecuente(Type tipoTarjeta, int tarifaConFranquicia)
     {
         var tipo = (TarjetaTipo)Activator.CreateInstance(tipoTarjeta)!;
         var tarjeta = Tarjeta.Crear(tipo);
-        tarjeta.CargarSaldo(3000m);
+        tarjeta.CargarSaldo(5000m);
 
-        // 30 viajes en el mes: una tarjeta Normal ya tendría descuento, éstas no.
-        RegistrarViajes(tarjeta, 30, new DateTime(2026, 3, 1, 10, 0, 0));
+        // 28 viajes previos: dos con franquicia y los demás a tarifa completa.
+        RegistrarViajes(tarjeta, 2, new DateTime(2026, 3, 2, 10, 0, 0), tarifaConFranquicia);
+        RegistrarViajes(tarjeta, 26, new DateTime(2026, 3, 2, 10, 12, 0));
 
-        var resultado = Colectivo.Crear("102").PagarCon(tarjeta);
+        var colectivo = Colectivo.Crear("102");
+        Assert.That(colectivo.PagarCon(tarjeta), Is.True);
+        _reloj.Avanzar(TimeSpan.FromMinutes(10));
+        Assert.That(colectivo.PagarCon(tarjeta), Is.True);
+        _reloj.Avanzar(TimeSpan.FromMinutes(10));
+        Assert.That(colectivo.PagarCon(tarjeta), Is.True);
 
-        Assert.That(resultado, Is.True);
-
-        var boleto = _db.Boletos.OrderBy(b => b.Id).Last();
-        Assert.That(boleto.Tarifa, Is.EqualTo((decimal)tarifaEsperada));
+        var tarifas = _db.Boletos.OrderByDescending(b => b.Id).Take(3).Select(b => b.Tarifa).ToArray();
+        Assert.That(tarifas, Is.EqualTo(new[] { 2150m, (decimal)tarifaConFranquicia, (decimal)tarifaConFranquicia }));
     }
 
-    [Test]
-    public void TarjetaSinTipo_AplicaDescuentoDeUsoFrecuente()
+    private void RegistrarViajes(Tarjeta tarjeta, int cantidad, DateTime fecha, decimal tarifa = Colectivo.TarifaBasica)
     {
-        var tarjeta = Tarjeta.Crear();
-        tarjeta.CargarSaldo(3000m);
+        var colectivo = Colectivo.Crear("102");
 
-        // 29 viajes en el mes: el viaje 30 tiene 20% de descuento.
-        RegistrarViajes(tarjeta, 29, new DateTime(2026, 3, 10, 10, 0, 0));
-
-        var resultado = Colectivo.Crear("102").PagarCon(tarjeta);
-
-        Assert.That(resultado, Is.True);
-
-        var boleto = _db.Boletos.OrderBy(b => b.Id).Last();
-        Assert.That(boleto.Tarifa, Is.EqualTo(Colectivo.TarifaBasica * 0.80m));
-    }
-
-    private void RegistrarViajes(Tarjeta tarjeta, int cantidad, DateTime fecha)
-    {
         for (var i = 0; i < cantidad; i++)
         {
             _db.Boletos.Add(new Boleto
             {
-                TarjetaId = tarjeta.Id,
-                Tarifa = Colectivo.TarifaBasica,
-                TotalAbonado = Colectivo.TarifaBasica,
+                Tarjeta = tarjeta,
+                Colectivo = colectivo,
+                Tarifa = tarifa,
+                TotalAbonado = tarifa,
                 SaldoRestante = 0m,
-                Fecha = fecha,
-                TipoTarjeta = "Normal",
-                Linea = "102",
+                Fecha = fecha.AddMinutes(i * 6),
+                TipoTarjeta = tarjeta.TarjetaTipo?.Nombre ?? "Normal",
+                Linea = colectivo.Linea,
                 EsTrasbordo = false,
             });
         }

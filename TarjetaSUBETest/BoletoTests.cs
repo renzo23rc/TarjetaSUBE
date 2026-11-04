@@ -21,57 +21,32 @@ public class BoletoTests
     [TearDown]
     public void TearDown()
     {
+        Contexto.Reloj = TimeProvider.System;
         _db.Dispose();
     }
 
     [Test]
     public void Boleto_GeneradoPorPagarCon_TieneLosCamposCorrectos()
     {
+        var fecha = new DateTime(2026, 3, 16, 10, 0, 0);
+        Contexto.Reloj = new FakeTimeProvider(fecha);
         var tarjeta = Tarjeta.Crear();
         tarjeta.CargarSaldo(3000m);
         var colectivo = Colectivo.Crear("102");
 
-        colectivo.PagarCon(tarjeta);
+        Assert.That(colectivo.PagarCon(tarjeta), Is.True);
 
-        var boleto = _db.Boletos.Include(b => b.Tarjeta).Single();
+        var boleto = _db.Boletos.AsNoTracking().Include(b => b.Tarjeta).Single();
 
         Assert.That(boleto.Id, Is.Not.EqualTo(0));
         Assert.That(boleto.Tarifa, Is.EqualTo(Colectivo.TarifaBasica));
         Assert.That(boleto.TotalAbonado, Is.EqualTo(Colectivo.TarifaBasica));
         Assert.That(boleto.SaldoRestante, Is.EqualTo(850m));
-        Assert.That(boleto.Fecha, Is.Not.EqualTo(default(DateTime)));
+        Assert.That(boleto.Fecha, Is.EqualTo(fecha));
         Assert.That(boleto.TipoTarjeta, Is.EqualTo("Normal"));
         Assert.That(boleto.Linea, Is.EqualTo("102"));
         Assert.That(boleto.TarjetaId, Is.EqualTo(tarjeta.Id));
         Assert.That(boleto.ColectivoId, Is.EqualTo(colectivo.Id));
     }
 
-    [Test]
-    public void BoletoPersistidoDirectamente_ConservaSusCampos()
-    {
-        var fecha = new DateTime(2026, 3, 15, 10, 30, 0);
-        var boleto = new Boleto
-        {
-            Tarifa = Colectivo.TarifaBasica,
-            TotalAbonado = Colectivo.TarifaBasica,
-            SaldoRestante = 12345m,
-            Fecha = fecha,
-            TipoTarjeta = "Normal",
-            Linea = "102",
-        };
-
-        _db.Boletos.Add(boleto);
-        _db.SaveChanges();
-
-        Assert.That(boleto.Id, Is.Not.EqualTo(0));
-
-        var recuperado = _db.Boletos.AsNoTracking().Single(b => b.Id == boleto.Id);
-
-        Assert.That(recuperado.Tarifa, Is.EqualTo(2150m));
-        Assert.That(recuperado.TotalAbonado, Is.EqualTo(2150m));
-        Assert.That(recuperado.SaldoRestante, Is.EqualTo(12345m));
-        Assert.That(recuperado.Fecha, Is.EqualTo(fecha));
-        Assert.That(recuperado.TipoTarjeta, Is.EqualTo("Normal"));
-        Assert.That(recuperado.Linea, Is.EqualTo("102"));
-    }
 }
