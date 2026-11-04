@@ -11,4 +11,15 @@ public class TarjetaBoletoGratuito : TarjetaTipo
     {
         return 0m;
     }
+
+    public override decimal CalcularTarifa(TarjetaDbContext context, Tarjeta tarjeta, DateTime ahora, decimal tarifaBasica)
+    {
+        var conDescuentoHoy = context.Boletos
+            .Count(b => b.TarjetaId == tarjeta.Id && b.Fecha.Date == ahora.Date && b.Tarifa < tarifaBasica);
+        if (conDescuentoHoy >= 2)
+        {
+            return tarifaBasica;
+        }
+        return CalcularMonto(tarifaBasica);
+    }
 }
