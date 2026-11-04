@@ -75,27 +75,11 @@ public class Tarjeta
         }
 
         var saldoPrevio = Saldo;
-        if (SaldoPendiente <= espacioDisponible)
-        {
-            Saldo += SaldoPendiente;
-            SaldoPendiente = 0m;
-        }
-        else
-        {
-            Saldo = SaldoMaximo;
-            SaldoPendiente -= espacioDisponible;
-        }
+        var montoAcreditado = Math.Min(SaldoPendiente, espacioDisponible);
 
-        if (saldoPrevio >= 0)
-        {
-            return 0m;
-        }
+        Saldo += montoAcreditado;
+        SaldoPendiente -= montoAcreditado;
 
-        if (Saldo >= 0)
-        {
-            return decimal.Negate(saldoPrevio);
-        }
-
-        return Saldo - saldoPrevio;
+        return saldoPrevio < 0 ? Math.Min(Saldo, 0m) - saldoPrevio : 0m;
     }
 }
