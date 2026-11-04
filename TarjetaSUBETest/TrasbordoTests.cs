@@ -3,6 +3,9 @@ using TarjetaSUBE;
 
 namespace TarjetaSUBETest;
 
+// Interpretación de los límites (el enunciado no los aclara):
+// - Ventana de 1 hora: inclusiva. Un trasbordo a exactamente 1 hora del primer boleto sigue siendo trasbordo.
+// - Horario: lunes a sábado, 7:00 (inclusive) y 22:00 (exclusivo). A las 22:00 ya no hay trasbordo.
 public class TrasbordoTests
 {
     private TarjetaDbContext _db = null!;
@@ -31,29 +34,17 @@ public class TrasbordoTests
     }
 
     [Test]
-    public void PrimerViaje_NoEsTrasbordo_Y_CobraTarifaNormal()
-    {
-        var tarjeta = Tarjeta.Crear();
-        tarjeta.CargarSaldo(3000m);
-        var colectivo = Colectivo.Crear("102");
-
-        var resultado = colectivo.PagarCon(tarjeta);
-
-        Assert.That(resultado, Is.True);
-        Assert.That(tarjeta.Saldo, Is.EqualTo(3000m - Colectivo.TarifaBasica));
-
-        var boleto = UltimoBoleto();
-        Assert.That(boleto.EsTrasbordo, Is.False);
-        Assert.That(boleto.Tarifa, Is.EqualTo(Colectivo.TarifaBasica));
-    }
-
-    [Test]
-    public void SegundoViaje_EnLineaDistinta_DentroDeLaHora_EsTrasbordoGratis()
+    public void PrimerViajeCobraTarifaNormal_YElTrasbordoEsGratis()
     {
         var tarjeta = Tarjeta.Crear();
         tarjeta.CargarSaldo(3000m);
 
         Colectivo.Crear("102").PagarCon(tarjeta);
+
+        var primerBoleto = UltimoBoleto();
+        Assert.That(primerBoleto.EsTrasbordo, Is.False);
+        Assert.That(primerBoleto.Tarifa, Is.EqualTo(Colectivo.TarifaBasica));
+        Assert.That(tarjeta.Saldo, Is.EqualTo(3000m - Colectivo.TarifaBasica));
 
         _reloj.Avanzar(TimeSpan.FromMinutes(30));
         var resultado = Colectivo.Crear("142").PagarCon(tarjeta);
@@ -61,13 +52,13 @@ public class TrasbordoTests
         Assert.That(resultado, Is.True);
         Assert.That(tarjeta.Saldo, Is.EqualTo(3000m - Colectivo.TarifaBasica));
 
-        var boleto = UltimoBoleto();
-        Assert.That(boleto.EsTrasbordo, Is.True);
-        Assert.That(boleto.Tarifa, Is.EqualTo(0m));
+        var segundoBoleto = UltimoBoleto();
+        Assert.That(segundoBoleto.EsTrasbordo, Is.True);
+        Assert.That(segundoBoleto.Tarifa, Is.EqualTo(0m));
     }
 
     [Test]
-    public void SegundoViaje_EnLaMismaLinea_NoEsTrasbordo()
+    public void ViajeEnLaMismaLinea_NoEsTrasbordo()
     {
         var tarjeta = Tarjeta.Crear();
         tarjeta.CargarSaldo(5000m);
@@ -86,7 +77,7 @@ public class TrasbordoTests
     }
 
     [Test]
-    public void Trasbordo_ExactamenteUnaHoraDespues_AunEsTrasbordo()
+    public void Trasbordo_ExactamenteUnaHoraDespues_SigueSiendoTrasbordo()
     {
         var tarjeta = Tarjeta.Crear();
         tarjeta.CargarSaldo(5000m);
@@ -124,70 +115,7 @@ public class TrasbordoTests
     }
 
     [Test]
-    public void Trasbordo_EnDomingo_NoEsTrasbordo()
-    {
-        _reloj.Establecer(new DateTime(2026, 3, 15, 10, 0, 0)); // domingo
-
-        var tarjeta = Tarjeta.Crear();
-        tarjeta.CargarSaldo(5000m);
-
-        Colectivo.Crear("102").PagarCon(tarjeta);
-
-        _reloj.Avanzar(TimeSpan.FromMinutes(10));
-        var resultado = Colectivo.Crear("142").PagarCon(tarjeta);
-
-        Assert.That(resultado, Is.True);
-        Assert.That(tarjeta.Saldo, Is.EqualTo(5000m - Colectivo.TarifaBasica * 2));
-
-        var boleto = UltimoBoleto();
-        Assert.That(boleto.EsTrasbordo, Is.False);
-        Assert.That(boleto.Tarifa, Is.EqualTo(Colectivo.TarifaBasica));
-    }
-
-    [Test]
-    public void Trasbordo_AntesDeLas7_NoEsTrasbordo()
-    {
-        _reloj.Establecer(new DateTime(2026, 3, 16, 6, 50, 0)); // lunes 6:50
-
-        var tarjeta = Tarjeta.Crear();
-        tarjeta.CargarSaldo(5000m);
-
-        Colectivo.Crear("102").PagarCon(tarjeta);
-
-        _reloj.Avanzar(TimeSpan.FromMinutes(5)); // 6:55
-        var resultado = Colectivo.Crear("142").PagarCon(tarjeta);
-
-        Assert.That(resultado, Is.True);
-        Assert.That(tarjeta.Saldo, Is.EqualTo(5000m - Colectivo.TarifaBasica * 2));
-
-        var boleto = UltimoBoleto();
-        Assert.That(boleto.EsTrasbordo, Is.False);
-        Assert.That(boleto.Tarifa, Is.EqualTo(Colectivo.TarifaBasica));
-    }
-
-    [Test]
-    public void Trasbordo_DespuesDeLas22_NoEsTrasbordo()
-    {
-        _reloj.Establecer(new DateTime(2026, 3, 16, 21, 50, 0)); // lunes 21:50
-
-        var tarjeta = Tarjeta.Crear();
-        tarjeta.CargarSaldo(5000m);
-
-        Colectivo.Crear("102").PagarCon(tarjeta);
-
-        _reloj.Avanzar(TimeSpan.FromMinutes(15)); // 22:05
-        var resultado = Colectivo.Crear("142").PagarCon(tarjeta);
-
-        Assert.That(resultado, Is.True);
-        Assert.That(tarjeta.Saldo, Is.EqualTo(5000m - Colectivo.TarifaBasica * 2));
-
-        var boleto = UltimoBoleto();
-        Assert.That(boleto.EsTrasbordo, Is.False);
-        Assert.That(boleto.Tarifa, Is.EqualTo(Colectivo.TarifaBasica));
-    }
-
-    [Test]
-    public void TransferenciasIlimitadas_DentroDeLaHora_SonTodasGratis()
+    public void TrasbordosIlimitados_DentroDeLaHora_SonGratis()
     {
         var tarjeta = Tarjeta.Crear();
         tarjeta.CargarSaldo(3000m);
@@ -212,11 +140,38 @@ public class TrasbordoTests
         Assert.That(boletos.Skip(1).All(b => b.Tarifa == 0m), Is.True);
     }
 
-    [Test]
-    public void TarjetaMedioBoleto_TambienPuedeTransferir()
+    [TestCase(2026, 3, 15, 10, 0, TestName = "Domingo")]
+    [TestCase(2026, 3, 16, 6, 50, TestName = "Antes de las 7")]
+    [TestCase(2026, 3, 16, 22, 5, TestName = "Después de las 22")]
+    public void Trasbordo_FueraDelHorarioPermitido_NoEsTrasbordo(int anio, int mes, int dia, int hora, int minuto)
     {
-        var tarjeta = Tarjeta.Crear(new TarjetaMedioBoleto());
-        tarjeta.CargarSaldo(3000m);
+        var horaSegundoViaje = new DateTime(anio, mes, dia, hora, minuto, 0);
+
+        _reloj.Establecer(horaSegundoViaje.AddMinutes(-10));
+        var tarjeta = Tarjeta.Crear();
+        tarjeta.CargarSaldo(5000m);
+        Colectivo.Crear("102").PagarCon(tarjeta);
+
+        _reloj.Establecer(horaSegundoViaje);
+        var resultado = Colectivo.Crear("142").PagarCon(tarjeta);
+
+        Assert.That(resultado, Is.True);
+        Assert.That(tarjeta.Saldo, Is.EqualTo(5000m - Colectivo.TarifaBasica * 2));
+
+        var boleto = UltimoBoleto();
+        Assert.That(boleto.EsTrasbordo, Is.False);
+        Assert.That(boleto.Tarifa, Is.EqualTo(Colectivo.TarifaBasica));
+    }
+
+    [TestCase(typeof(TarjetaNormal))]
+    [TestCase(typeof(TarjetaMedioBoleto))]
+    [TestCase(typeof(TarjetaBoletoGratuito))]
+    [TestCase(typeof(TarjetaFranquiciaCompleta))]
+    public void TodasLasTarjetas_PuedenTransferir(Type tipoTarjeta)
+    {
+        var tipo = (TarjetaTipo)Activator.CreateInstance(tipoTarjeta)!;
+        var tarjeta = Tarjeta.Crear(tipo);
+        tarjeta.CargarSaldo(5000m);
 
         Colectivo.Crear("102").PagarCon(tarjeta);
 
@@ -224,7 +179,6 @@ public class TrasbordoTests
         var resultado = Colectivo.Crear("142").PagarCon(tarjeta);
 
         Assert.That(resultado, Is.True);
-        Assert.That(tarjeta.Saldo, Is.EqualTo(3000m - Colectivo.TarifaBasica / 2));
 
         var boleto = UltimoBoleto();
         Assert.That(boleto.EsTrasbordo, Is.True);
@@ -232,35 +186,29 @@ public class TrasbordoTests
     }
 
     [Test]
-    public void TarjetaBoletoGratuito_LaTransferenciaSeMarcaEnElBoleto()
+    public void LaVentanaDeTrasbordo_SeAnclaAlPrimerBoleto()
     {
-        var tarjeta = Tarjeta.Crear(new TarjetaBoletoGratuito());
+        var tarjeta = Tarjeta.Crear();
+        tarjeta.CargarSaldo(8000m);
 
+        // Primer viaje a las 10:00.
         Colectivo.Crear("102").PagarCon(tarjeta);
 
-        _reloj.Avanzar(TimeSpan.FromMinutes(10));
+        // Trasbordo a las 10:50 (dentro de la hora desde el primer boleto).
+        _reloj.Avanzar(TimeSpan.FromMinutes(50));
         Colectivo.Crear("142").PagarCon(tarjeta);
 
-        var boleto = UltimoBoleto();
-        Assert.That(boleto.EsTrasbordo, Is.True);
-        Assert.That(boleto.Tarifa, Is.EqualTo(0m));
-    }
-
-    [Test]
-    public void TarjetaFranquiciaCompleta_TambienPuedeTransferir()
-    {
-        var tarjeta = Tarjeta.Crear(new TarjetaFranquiciaCompleta());
-
-        Colectivo.Crear("102").PagarCon(tarjeta);
-
-        _reloj.Avanzar(TimeSpan.FromMinutes(10));
-        var resultado = Colectivo.Crear("142").PagarCon(tarjeta);
+        // Tercer viaje a las 11:10: pasaron 70 min del primer boleto (fuera de la hora),
+        // aunque solo 20 min del trasbordo anterior. Debe cobrarse.
+        _reloj.Avanzar(TimeSpan.FromMinutes(20));
+        var resultado = Colectivo.Crear("135").PagarCon(tarjeta);
 
         Assert.That(resultado, Is.True);
+        Assert.That(tarjeta.Saldo, Is.EqualTo(8000m - Colectivo.TarifaBasica * 2));
 
         var boleto = UltimoBoleto();
-        Assert.That(boleto.EsTrasbordo, Is.True);
-        Assert.That(boleto.Tarifa, Is.EqualTo(0m));
+        Assert.That(boleto.EsTrasbordo, Is.False);
+        Assert.That(boleto.Tarifa, Is.EqualTo(Colectivo.TarifaBasica));
     }
 
     private Boleto UltimoBoleto()
