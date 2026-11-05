@@ -3,7 +3,6 @@ namespace TarjetaSUBE;
 public class Tarjeta
 {
     public int Id { get; set; }
-    public long VersionConcurrencia { get; private set; }
     public decimal Saldo { get; private set; }
     public decimal SaldoPendiente { get; set; }
     public int? TarjetaTipoId { get; set; }

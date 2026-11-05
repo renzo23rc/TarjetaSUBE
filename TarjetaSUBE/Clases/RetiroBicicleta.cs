@@ -4,7 +4,6 @@ namespace TarjetaSUBE;
 public class RetiroBicicleta
 {
     public int Id { get; set; }
-    public long VersionConcurrencia { get; private set; }
     public int TarjetaId { get; set; }
     public Tarjeta? Tarjeta { get; set; }
     public DateTime FechaRetiro { get; set; }

@@ -14,32 +14,6 @@ public class TarjetaDbContext : DbContext
     public DbSet<TarjetaTipo> TarjetaTipos => Set<TarjetaTipo>();
     public DbSet<RetiroBicicleta> RetirosBicicletas => Set<RetiroBicicleta>();
 
-    // La versión entera evita comparar el formato textual de los decimales en SQLite.
-    // EF incluye la versión original en cada UPDATE y rechaza escrituras obsoletas.
-    public override int SaveChanges(bool acceptAllChangesOnSuccess)
-    {
-        IncrementarVersiones();
-        return base.SaveChanges(acceptAllChangesOnSuccess);
-    }
-
-    public override Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken = default)
-    {
-        IncrementarVersiones();
-        return base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
-    }
-
-    private void IncrementarVersiones()
-    {
-        ChangeTracker.DetectChanges();
-        foreach (var entrada in ChangeTracker.Entries().Where(entrada =>
-                     entrada.State == EntityState.Modified &&
-                     (entrada.Entity is Tarjeta || entrada.Entity is RetiroBicicleta)))
-        {
-            var version = entrada.Property(nameof(Tarjeta.VersionConcurrencia));
-            version.CurrentValue = checked((long)version.OriginalValue! + 1);
-        }
-    }
-
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
         if (!optionsBuilder.IsConfigured)
@@ -60,10 +34,6 @@ public class TarjetaDbContext : DbContext
             .HasPrecision(18, 2);
 
         modelBuilder.Entity<RetiroBicicleta>()
-            .Property(r => r.VersionConcurrencia)
-            .IsConcurrencyToken();
-
-        modelBuilder.Entity<RetiroBicicleta>()
             .HasIndex(r => r.TarjetaId, "IX_RetirosBicicletas_TarjetaId_Activo")
             .IsUnique()
             .HasFilter("\"FechaDevolucion\" IS NULL");
@@ -75,10 +45,6 @@ public class TarjetaDbContext : DbContext
         modelBuilder.Entity<Tarjeta>()
             .Property(t => t.SaldoPendiente)
             .HasPrecision(18, 2);
-
-        modelBuilder.Entity<Tarjeta>()
-            .Property(t => t.VersionConcurrencia)
-            .IsConcurrencyToken();
 
         modelBuilder.Entity<TarjetaTipo>()
             .Property(t => t.PorcentajeDescuento)
