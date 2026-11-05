@@ -170,19 +170,19 @@ public class TarjetaTests
     }
 
     [Test]
-    public void Pagar_NoPuedeQuedarConMenosSaldoQueElPermitido()
+    public void Pagar_PermiteLlegarAlSaldoMinimoPeroNoQuedarPorDebajo()
     {
-        var tarjeta = DejarTarjetaConSaldo(200m);
+        var tarjeta = DejarTarjetaConSaldo(150m);
 
         var primerViaje = tarjeta.Pagar(Colectivo.TarifaBasica);
 
         Assert.That(primerViaje, Is.True);
-        Assert.That(tarjeta.Saldo, Is.EqualTo(200m - Colectivo.TarifaBasica));
+        Assert.That(tarjeta.Saldo, Is.EqualTo(-2000m));
 
         var segundoViaje = tarjeta.Pagar(Colectivo.TarifaBasica);
 
         Assert.That(segundoViaje, Is.False);
-        Assert.That(tarjeta.Saldo, Is.EqualTo(200m - Colectivo.TarifaBasica));
+        Assert.That(tarjeta.Saldo, Is.EqualTo(-2000m));
     }
 
     [Test]
@@ -198,8 +198,7 @@ public class TarjetaTests
         Assert.That(tarjeta.Saldo, Is.EqualTo(200m - Colectivo.TarifaBasica + 2000m));
     }
 
-    // 1000 no es un monto de carga aceptado: se llega a ese saldo
-    // cargando 2000 y pagando un pasaje de 1000.
+    // Se alcanza el saldo deseado mediante una carga válida y un pago previo.
     private static Tarjeta DejarTarjetaConSaldo(decimal saldoObjetivo)
     {
         var tarjeta = Tarjeta.Crear();

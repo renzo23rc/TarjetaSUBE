@@ -204,19 +204,25 @@ public class ColectivoTests
     }
 
     [Test]
-    public void MedioBoleto_NoPermiteViajarNuevamenteEnMenosDeCincoMinutos()
+    public void MedioBoleto_RechazaAntesDeCincoMinutosYPuedeViajarAlCumplirlos()
     {
         var tarjeta = Tarjeta.Crear(new TarjetaMedioBoleto());
         tarjeta.CargarSaldo(5000m);
         var colectivo = Colectivo.Crear("102");
 
         Assert.That(colectivo.PagarCon(tarjeta), Is.True);
+        _reloj.Avanzar(TimeSpan.FromMinutes(5) - TimeSpan.FromSeconds(1));
         Assert.That(colectivo.PagarCon(tarjeta), Is.False);
         Assert.That(_db.Boletos.Count(), Is.EqualTo(1));
+
+        _reloj.Avanzar(TimeSpan.FromSeconds(1));
+        Assert.That(colectivo.PagarCon(tarjeta), Is.True);
+        Assert.That(_db.Boletos.Count(), Is.EqualTo(2));
+        Assert.That(tarjeta.Saldo, Is.EqualTo(2850m));
     }
 
     [Test]
-    public void MedioBoleto_SoloPermiteDosViajesPorDiaConDescuento_ElTerceroPagaNormal()
+    public void MedioBoleto_AplicaDosDescuentosPorDiaYLosReiniciaAlDiaSiguiente()
     {
         var tarjeta = Tarjeta.Crear(new TarjetaMedioBoleto());
         tarjeta.CargarSaldo(10000m);
@@ -228,9 +234,12 @@ public class ColectivoTests
         _reloj.Avanzar(TimeSpan.FromMinutes(10));
         Assert.That(colectivo.PagarCon(tarjeta), Is.True);
 
+        _reloj.Avanzar(TimeSpan.FromDays(1));
+        Assert.That(colectivo.PagarCon(tarjeta), Is.True);
+
         var tarifas = _db.Boletos.OrderBy(b => b.Id).Select(b => b.Tarifa).ToArray();
-        Assert.That(tarifas, Is.EqualTo(new[] { 1075m, 1075m, 2150m }));
-        Assert.That(tarjeta.Saldo, Is.EqualTo(5700m));
+        Assert.That(tarifas, Is.EqualTo(new[] { 1075m, 1075m, 2150m, 1075m }));
+        Assert.That(tarjeta.Saldo, Is.EqualTo(4625m));
     }
 
     [Test]

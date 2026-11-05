@@ -65,16 +65,20 @@ public class InterurbanoTests
     }
 
     [Test]
-    public void PagarCon_BoletoGratuito_EnInterurbano_NoCobra()
+    public void PagarCon_BoletoGratuito_EnInterurbano_CobraTarifaCompletaDesdeElTercerViaje()
     {
         var tarjeta = Tarjeta.Crear(new TarjetaBoletoGratuito());
-        tarjeta.CargarSaldo(2000m);
+        tarjeta.CargarSaldo(5000m);
+        var colectivo = Colectivo.CrearInterurbano("Gálvez");
 
-        var resultado = Colectivo.CrearInterurbano("Gálvez").PagarCon(tarjeta);
+        Assert.That(colectivo.PagarCon(tarjeta), Is.True);
+        _reloj.Avanzar(TimeSpan.FromMinutes(10));
+        Assert.That(colectivo.PagarCon(tarjeta), Is.True);
+        _reloj.Avanzar(TimeSpan.FromMinutes(10));
+        Assert.That(colectivo.PagarCon(tarjeta), Is.True);
 
-        Assert.That(resultado, Is.True);
-        var boleto = _db.Boletos.Single();
-        Assert.That(boleto.Tarifa, Is.EqualTo(0m));
+        var tarifas = _db.Boletos.OrderBy(b => b.Id).Select(b => b.Tarifa).ToArray();
+        Assert.That(tarifas, Is.EqualTo(new[] { 0m, 0m, 3000m }));
         Assert.That(tarjeta.Saldo, Is.EqualTo(2000m));
     }
 
