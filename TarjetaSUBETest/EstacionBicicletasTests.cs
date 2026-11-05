@@ -36,7 +36,7 @@ public class EstacionBicicletasTests
     [TearDown]
     public void TearDown()
     {
-        Contexto.Reloj = TimeProvider.System;
+        Contexto.Reloj = new ProveedorDeFechaSistema();
         _db.Dispose();
         _conexion.Dispose();
     }

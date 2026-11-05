@@ -55,7 +55,7 @@ public class Tarjeta
 
     public decimal CalcularTarifa(decimal tarifaBasica)
     {
-        return CalcularTarifa(tarifaBasica, Contexto.Reloj.GetLocalNow().DateTime);
+        return CalcularTarifa(tarifaBasica, Contexto.Reloj.Ahora);
     }
 
     internal decimal CalcularTarifa(decimal tarifaBasica, DateTime ahora)

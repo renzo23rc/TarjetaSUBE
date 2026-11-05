@@ -20,7 +20,7 @@ public class EstacionBicicletas
     {
         ArgumentNullException.ThrowIfNull(tarjeta);
         var retiros = ObtenerRetiros(tarjeta);
-        return CalcularCosto(retiros, Contexto.Reloj.GetLocalNow().DateTime);
+        return CalcularCosto(retiros, Contexto.Reloj.Ahora);
     }
 
     // Un retiro exitoso cobra la tarifa diaria (si todavía no se pagó) y todas
@@ -34,7 +34,7 @@ public class EstacionBicicletas
             return false;
         }
 
-        var ahora = Contexto.Reloj.GetLocalNow().DateTime;
+        var ahora = Contexto.Reloj.Ahora;
         var costo = CalcularCosto(retiros, ahora);
 
         VerificarSaldoActual(tarjeta);
@@ -95,7 +95,7 @@ public class EstacionBicicletas
             return false;
         }
 
-        var ahora = Contexto.Reloj.GetLocalNow().DateTime;
+        var ahora = Contexto.Reloj.Ahora;
         if (ahora < retiro.FechaRetiro)
         {
             return false;

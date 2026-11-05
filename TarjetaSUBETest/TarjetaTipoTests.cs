@@ -31,7 +31,7 @@ public class TarjetaTipoTests
         }
         finally
         {
-            Contexto.Reloj = TimeProvider.System;
+            Contexto.Reloj = new ProveedorDeFechaSistema();
         }
     }
 

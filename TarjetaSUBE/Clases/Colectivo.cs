@@ -35,7 +35,7 @@ public class Colectivo
             ? Contexto.Db.TarjetaTipos.Find(id)
             : null;
 
-        var ahora = Contexto.Reloj.GetLocalNow().DateTime;
+        var ahora = Contexto.Reloj.Ahora;
 
         if (tarjeta.TarjetaTipo != null && !tarjeta.TarjetaTipo.PuedeViajar(Contexto.Db, tarjeta.Id, ahora))
         {

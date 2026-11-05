@@ -31,7 +31,7 @@ public class BoletoUsoFrecuenteTests
     [TearDown]
     public void TearDown()
     {
-        Contexto.Reloj = TimeProvider.System;
+        Contexto.Reloj = new ProveedorDeFechaSistema();
         _db.Dispose();
     }
 

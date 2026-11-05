@@ -1,10 +1,13 @@
 namespace TarjetaSUBETest;
 
+using TarjetaSUBE;
+
 /// <summary>
 /// Proveedor de tiempo falso para testear reglas que dependen de la fecha y la hora.
 /// Devuelve siempre la misma hora hasta que se la avanza o se la cambia manualmente.
+/// Alineado a IProveedorFecha de la referencia (sin TimeProvider).
 /// </summary>
-public sealed class FakeTimeProvider : TimeProvider
+public sealed class FakeTimeProvider : IProveedorFecha
 {
     private DateTime _ahora;
 
@@ -14,13 +17,6 @@ public sealed class FakeTimeProvider : TimeProvider
     }
 
     public DateTime Ahora => _ahora;
-
-    public override DateTimeOffset GetUtcNow()
-    {
-        return new DateTimeOffset(_ahora, TimeSpan.Zero);
-    }
-
-    public override TimeZoneInfo LocalTimeZone => TimeZoneInfo.Utc;
 
     public void Avanzar(TimeSpan tiempo)
     {
