@@ -5,6 +5,7 @@ public class TarjetaFranquiciaCompleta : TarjetaTipo
     public TarjetaFranquiciaCompleta()
     {
         Nombre = "Franquicia Completa";
+        PorcentajeDescuento = 100m;
     }
 
     public override decimal CalcularMonto(decimal tarifaBasica)

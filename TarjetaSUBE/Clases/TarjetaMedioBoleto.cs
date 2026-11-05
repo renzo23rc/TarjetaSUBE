@@ -5,6 +5,7 @@ public class TarjetaMedioBoleto : TarjetaTipo
     public TarjetaMedioBoleto()
     {
         Nombre = "Medio Boleto Estudiantil";
+        PorcentajeDescuento = 50m;
     }
 
     public override decimal CalcularMonto(decimal tarifaBasica)

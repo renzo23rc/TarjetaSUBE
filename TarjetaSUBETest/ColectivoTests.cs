@@ -36,8 +36,9 @@ public class ColectivoTests
         var colectivo = Colectivo.Crear("102");
 
         Assert.That(colectivo.Id, Is.Not.EqualTo(0));
-        Assert.That(colectivo.Linea, Is.EqualTo("102"));
-        Assert.That(_db.Colectivos.Find(colectivo.Id), Is.Not.Null);
+        var guardado = _db.Colectivos.AsNoTracking().SingleOrDefault(c => c.Id == colectivo.Id);
+        Assert.That(guardado, Is.Not.Null);
+        Assert.That(guardado!.Linea, Is.EqualTo("102"));
     }
 
     [Test]
@@ -51,21 +52,6 @@ public class ColectivoTests
 
         Assert.That(resultado, Is.True);
         Assert.That(tarjeta.Saldo, Is.EqualTo(850m));
-    }
-
-    [Test]
-    public void PagarCon_GeneraUnBoletoConLaTarifaYSaldoRestante()
-    {
-        var tarjeta = Tarjeta.Crear();
-        tarjeta.CargarSaldo(3000m);
-        var colectivo = Colectivo.Crear("102");
-
-        colectivo.PagarCon(tarjeta);
-
-        var boletos = _db.Boletos.ToList();
-        Assert.That(boletos, Has.Count.EqualTo(1));
-        Assert.That(boletos[0].Tarifa, Is.EqualTo(2150m));
-        Assert.That(boletos[0].SaldoRestante, Is.EqualTo(850m));
     }
 
     [Test]
@@ -129,6 +115,7 @@ public class ColectivoTests
         Assert.That(boleto.Tarifa, Is.EqualTo(1075m));
         Assert.That(boleto.TipoTarjeta, Is.EqualTo("Medio Boleto Estudiantil"));
         Assert.That(boleto.TotalAbonado, Is.EqualTo(1075m));
+        Assert.That(boleto.SaldoRestante, Is.EqualTo(3925m));
     }
 
     [Test]
@@ -149,10 +136,13 @@ public class ColectivoTests
         Assert.That(tarjeta.Saldo, Is.EqualTo(2000m));
         var boleto = _db.Boletos.Single();
         Assert.That(boleto.Tarifa, Is.EqualTo(0m));
+        Assert.That(boleto.TipoTarjeta, Is.EqualTo("Boleto Gratuito Estudiantil"));
+        Assert.That(boleto.TotalAbonado, Is.EqualTo(0m));
+        Assert.That(boleto.SaldoRestante, Is.EqualTo(2000m));
     }
 
     [Test]
-    public void PagarCon_ConFranquiciaCompleta_SiemprePuedePagar()
+    public void PagarCon_ConFranquiciaCompletaYSaldoMinimo_PuedePagarEnHorarioHabil()
     {
         var tipo = new TarjetaFranquiciaCompleta();
         _db.TarjetaTipos.Add(tipo);
@@ -171,6 +161,8 @@ public class ColectivoTests
         var boleto = _db.Boletos.Single();
         Assert.That(boleto.Tarifa, Is.EqualTo(0m));
         Assert.That(boleto.TipoTarjeta, Is.EqualTo("Franquicia Completa"));
+        Assert.That(boleto.TotalAbonado, Is.EqualTo(0m));
+        Assert.That(boleto.SaldoRestante, Is.EqualTo(-2000m));
     }
 
     [Test]
@@ -228,29 +220,33 @@ public class ColectivoTests
     {
         var tarjeta = Tarjeta.Crear(new TarjetaMedioBoleto());
         tarjeta.CargarSaldo(10000m);
-        var fecha = _reloj.Ahora.AddMinutes(-10);
-        _db.Boletos.Add(new Boleto { Tarifa = 1075m, TotalAbonado = 1075m, SaldoRestante = 8925m, Fecha = fecha, TipoTarjeta = "Medio Boleto Estudiantil", Linea = "102", TarjetaId = tarjeta.Id, Tarjeta = tarjeta });
-        _db.Boletos.Add(new Boleto { Tarifa = 1075m, TotalAbonado = 1075m, SaldoRestante = 7850m, Fecha = fecha, TipoTarjeta = "Medio Boleto Estudiantil", Linea = "102", TarjetaId = tarjeta.Id, Tarjeta = tarjeta });
-        _db.SaveChanges();
         var colectivo = Colectivo.Crear("102");
 
         Assert.That(colectivo.PagarCon(tarjeta), Is.True);
-        var boleto = _db.Boletos.OrderByDescending(b => b.Id).First();
-        Assert.That(boleto.Tarifa, Is.EqualTo(2150m));
-        Assert.That(_db.Boletos.Count(b => b.Tarifa < 2150m), Is.EqualTo(2));
+        _reloj.Avanzar(TimeSpan.FromMinutes(10));
+        Assert.That(colectivo.PagarCon(tarjeta), Is.True);
+        _reloj.Avanzar(TimeSpan.FromMinutes(10));
+        Assert.That(colectivo.PagarCon(tarjeta), Is.True);
+
+        var tarifas = _db.Boletos.OrderBy(b => b.Id).Select(b => b.Tarifa).ToArray();
+        Assert.That(tarifas, Is.EqualTo(new[] { 1075m, 1075m, 2150m }));
+        Assert.That(tarjeta.Saldo, Is.EqualTo(5700m));
     }
 
     [Test]
-    public void BoletoGratuito_PermiteDosViajesGratisPorDia()
+    public void BoletoGratuito_NoPermiteMasDeDosViajesGratisPorDia()
     {
         var tarjeta = Tarjeta.Crear(new TarjetaBoletoGratuito());
-        tarjeta.CargarSaldo(2000m);
+        tarjeta.CargarSaldo(10000m);
         var colectivo = Colectivo.Crear("102");
 
-        Assert.That(colectivo.PagarCon(tarjeta), Is.True);
-        Assert.That(colectivo.PagarCon(tarjeta), Is.True);
-        Assert.That(_db.Boletos.Count(), Is.EqualTo(2));
-        Assert.That(_db.Boletos.All(b => b.Tarifa == 0m), Is.True);
+        for (var i = 0; i < 3; i++)
+        {
+            Assert.That(colectivo.PagarCon(tarjeta), Is.True);
+            _reloj.Avanzar(TimeSpan.FromMinutes(10));
+        }
+
+        Assert.That(_db.Boletos.Count(b => b.Tarifa == 0m), Is.EqualTo(2));
     }
 
     [Test]
@@ -258,14 +254,16 @@ public class ColectivoTests
     {
         var tarjeta = Tarjeta.Crear(new TarjetaBoletoGratuito());
         tarjeta.CargarSaldo(10000m);
-        var fecha = _reloj.Ahora.AddMinutes(-10);
-        _db.Boletos.Add(new Boleto { Tarifa = 0m, TotalAbonado = 0m, SaldoRestante = 10000m, Fecha = fecha, TipoTarjeta = "Boleto Gratuito Estudiantil", Linea = "102", TarjetaId = tarjeta.Id, Tarjeta = tarjeta });
-        _db.Boletos.Add(new Boleto { Tarifa = 0m, TotalAbonado = 0m, SaldoRestante = 10000m, Fecha = fecha, TipoTarjeta = "Boleto Gratuito Estudiantil", Linea = "102", TarjetaId = tarjeta.Id, Tarjeta = tarjeta });
-        _db.SaveChanges();
         var colectivo = Colectivo.Crear("102");
 
         Assert.That(colectivo.PagarCon(tarjeta), Is.True);
-        var boleto = _db.Boletos.OrderByDescending(b => b.Id).First();
-        Assert.That(boleto.Tarifa, Is.EqualTo(2150m));
+        _reloj.Avanzar(TimeSpan.FromMinutes(10));
+        Assert.That(colectivo.PagarCon(tarjeta), Is.True);
+        _reloj.Avanzar(TimeSpan.FromMinutes(10));
+        Assert.That(colectivo.PagarCon(tarjeta), Is.True);
+        _reloj.Avanzar(TimeSpan.FromMinutes(10));
+        Assert.That(colectivo.PagarCon(tarjeta), Is.True);
+        var tarifas = _db.Boletos.OrderBy(b => b.Id).Select(b => b.Tarifa).ToArray();
+        Assert.That(tarifas, Is.EqualTo(new[] { 0m, 0m, 2150m, 2150m }));
     }
 }

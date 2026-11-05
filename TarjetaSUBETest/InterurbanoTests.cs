@@ -31,23 +31,19 @@ public class InterurbanoTests
     }
 
     [Test]
-    public void CrearInterurbano_GuardaLaLineaConTarifaInterurbana()
+    public void CrearInterurbano_GuardaLaLineaYCobraTarifaInterurbana()
     {
         var colectivo = Colectivo.CrearInterurbano("Gálvez");
 
         Assert.That(colectivo.Id, Is.Not.EqualTo(0));
-        Assert.That(colectivo.Linea, Is.EqualTo("Gálvez"));
-        Assert.That(colectivo.Tarifa, Is.EqualTo(Colectivo.TarifaInterurbana));
-        Assert.That(_db.Colectivos.Find(colectivo.Id), Is.Not.Null);
-    }
-
-    [Test]
-    public void PagarCon_TarjetaNormal_EnInterurbano_CobraTarifaInterurbana()
-    {
+        var guardado = _db.Colectivos.AsNoTracking().SingleOrDefault(c => c.Id == colectivo.Id);
+        Assert.That(guardado, Is.Not.Null);
+        Assert.That(guardado!.Linea, Is.EqualTo("Gálvez"));
+        Assert.That(guardado.Tarifa, Is.EqualTo(Colectivo.TarifaInterurbana));
         var tarjeta = Tarjeta.Crear(new TarjetaNormal());
         tarjeta.CargarSaldo(5000m);
 
-        var resultado = Colectivo.CrearInterurbano("Gálvez").PagarCon(tarjeta);
+        var resultado = colectivo.PagarCon(tarjeta);
 
         Assert.That(resultado, Is.True);
         Assert.That(tarjeta.Saldo, Is.EqualTo(2000m));

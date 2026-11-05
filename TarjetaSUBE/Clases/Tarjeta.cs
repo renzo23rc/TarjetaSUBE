@@ -54,11 +54,17 @@ public class Tarjeta
 
     public decimal CalcularTarifa(decimal tarifaBasica)
     {
+        return CalcularTarifa(tarifaBasica, Contexto.Reloj.GetLocalNow().DateTime);
+    }
+
+    internal decimal CalcularTarifa(decimal tarifaBasica, DateTime ahora)
+    {
         TarjetaTipo ??= TarjetaTipoId is int id
             ? Contexto.Db.TarjetaTipos.Find(id)
             : null;
 
-        return TarjetaTipo?.CalcularMonto(tarifaBasica) ?? tarifaBasica;
+        var tipo = TarjetaTipo ?? new TarjetaNormal();
+        return tipo.CalcularTarifa(Contexto.Db, this, ahora, tarifaBasica);
     }
 
     public decimal AcreditarCarga()

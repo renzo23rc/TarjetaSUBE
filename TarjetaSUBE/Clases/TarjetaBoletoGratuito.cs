@@ -5,6 +5,7 @@ public class TarjetaBoletoGratuito : TarjetaTipo
     public TarjetaBoletoGratuito()
     {
         Nombre = "Boleto Gratuito Estudiantil";
+        PorcentajeDescuento = 100m;
     }
 
     public override decimal CalcularMonto(decimal tarifaBasica)

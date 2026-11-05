@@ -1,14 +1,40 @@
 namespace TarjetaSUBE;
 
-public abstract class TarjetaTipo
+public class TarjetaTipo
 {
+    private decimal _porcentajeDescuento;
+
+    public TarjetaTipo() { }
+
+    public TarjetaTipo(string nombre, decimal porcentajeDescuento)
+    {
+        Nombre = nombre;
+        PorcentajeDescuento = porcentajeDescuento;
+    }
+
     public int Id { get; set; }
     public string Nombre { get; set; } = string.Empty;
+    public decimal PorcentajeDescuento
+    {
+        get => _porcentajeDescuento;
+        protected set
+        {
+            if (value < 0m || value > 100m)
+            {
+                throw new ArgumentOutOfRangeException(nameof(value), "El descuento debe estar entre 0 y 100.");
+            }
+
+            _porcentajeDescuento = value;
+        }
+    }
 
     // Todas las tarjetas son franquicias salvo la Normal.
     public virtual bool EsFranquicia => true;
 
-    public abstract decimal CalcularMonto(decimal tarifaBasica);
+    public virtual decimal CalcularMonto(decimal tarifaBasica)
+    {
+        return tarifaBasica * (1m - PorcentajeDescuento / 100m);
+    }
 
     public virtual bool PuedeViajar(TarjetaDbContext context, int tarjetaId, DateTime ahora)
     {
