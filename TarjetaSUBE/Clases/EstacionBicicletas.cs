@@ -1,59 +1,102 @@
+using Microsoft.EntityFrameworkCore;
+
 namespace TarjetaSUBE;
 
-// Estación del sistema "Mi Bici Tu Bici".
-// Para retirar una bici, la tarjeta SUBE debe pagar la tarifa diaria del servicio.
-// Si el pago es rechazado (saldo insuficiente), no se permite el retiro.
-// Sin descuentos por franquicia: cualquier tarjeta paga la tarifa completa.
+// Las estaciones comparten el historial de retiros de cada tarjeta en la base de datos.
+// Los métodos requieren una tarjeta persistida y rastreada por Contexto.Db.
 public class EstacionBicicletas
 {
     public const decimal TarifaDiaria = 2418.75m;
     public const decimal MultaPorExceso = 1250m;
     public static readonly TimeSpan TiempoMaximoUso = TimeSpan.FromHours(1);
 
-    private readonly Dictionary<int, decimal> _multasPendientes = new();
-
-    // Multa acumulada pendiente de pago para la tarjeta (0 si no tiene).
     public decimal MultaPendiente(Tarjeta tarjeta)
     {
         ArgumentNullException.ThrowIfNull(tarjeta);
-        return _multasPendientes.TryGetValue(tarjeta.Id, out var multa) ? multa : 0m;
+        return ObtenerRetiros(tarjeta).Sum(retiro => retiro.MultaPendiente);
     }
 
-    // Costo del próximo retiro: tarifa diaria más las multas acumuladas.
     public decimal CalcularCosto(Tarjeta tarjeta)
     {
-        return TarifaDiaria + MultaPendiente(tarjeta);
+        ArgumentNullException.ThrowIfNull(tarjeta);
+        var retiros = ObtenerRetiros(tarjeta);
+        return CalcularCosto(retiros, Contexto.Reloj.GetLocalNow().DateTime);
     }
 
-    // Cobra el servicio con la tarjeta. Retorna true y habilita el retiro si el
-    // pago fue procesado; sino retorna false y rechaza el retiro (la multa
-    // pendiente, si la hay, se conserva para el próximo intento).
+    // Un retiro exitoso cobra la tarifa diaria (si todavía no se pagó) y todas
+    // las multas pendientes. Una tarjeta solo puede tener un retiro activo.
     public bool RetirarBici(Tarjeta tarjeta)
     {
         ArgumentNullException.ThrowIfNull(tarjeta);
-
-        if (!tarjeta.Pagar(CalcularCosto(tarjeta)))
+        var retiros = ObtenerRetiros(tarjeta);
+        if (retiros.Any(retiro => retiro.FechaDevolucion == null))
         {
             return false;
         }
 
-        _multasPendientes.Remove(tarjeta.Id);
+        var ahora = Contexto.Reloj.GetLocalNow().DateTime;
+        var costo = CalcularCosto(retiros, ahora);
+
+        // El saldo y el historial se guardan juntos en el mismo contexto.
+        if (!tarjeta.Pagar(costo))
+        {
+            return false;
+        }
+
+        foreach (var retiro in retiros)
+        {
+            retiro.MultaPendiente = 0m;
+        }
+
+        Contexto.Db.RetirosBicicletas.Add(new RetiroBicicleta
+        {
+            TarjetaId = tarjeta.Id,
+            FechaRetiro = ahora
+        });
+        Contexto.Db.SaveChanges();
         return true;
     }
 
-    // Registra la devolución de la bici. Si el tiempo de uso excede el máximo
-    // de 1 hora, acumula una multa de $1250 para el próximo pago.
-    // Retorna true cuando se aplicó multa, false cuando la devolución fue en término.
-    public bool DevolverBici(Tarjeta tarjeta, TimeSpan tiempoUso)
+    // La duración se calcula usando la fecha registrada, no un valor del llamador.
+    public bool DevolverBici(Tarjeta tarjeta)
     {
         ArgumentNullException.ThrowIfNull(tarjeta);
-
-        if (tiempoUso <= TiempoMaximoUso)
+        var retiro = ObtenerRetiros(tarjeta).SingleOrDefault(r => r.FechaDevolucion == null);
+        if (retiro == null)
         {
             return false;
         }
 
-        _multasPendientes[tarjeta.Id] = MultaPendiente(tarjeta) + MultaPorExceso;
+        var ahora = Contexto.Reloj.GetLocalNow().DateTime;
+        if (ahora < retiro.FechaRetiro)
+        {
+            return false;
+        }
+
+        retiro.FechaDevolucion = ahora;
+        if (ahora - retiro.FechaRetiro > TiempoMaximoUso)
+        {
+            retiro.MultaPendiente = MultaPorExceso;
+        }
+
+        Contexto.Db.SaveChanges();
         return true;
+    }
+
+    private static List<RetiroBicicleta> ObtenerRetiros(Tarjeta tarjeta)
+    {
+        var estado = Contexto.Db.Entry(tarjeta).State;
+        if (estado is not (EntityState.Unchanged or EntityState.Modified))
+        {
+            throw new ArgumentException("La tarjeta debe estar guardada y rastreada por el contexto actual.", nameof(tarjeta));
+        }
+
+        return Contexto.Db.RetirosBicicletas.Where(retiro => retiro.TarjetaId == tarjeta.Id).ToList();
+    }
+
+    private static decimal CalcularCosto(List<RetiroBicicleta> retiros, DateTime ahora)
+    {
+        var tarifa = retiros.Any(retiro => retiro.FechaRetiro.Date == ahora.Date) ? 0m : TarifaDiaria;
+        return tarifa + retiros.Sum(retiro => retiro.MultaPendiente);
     }
 }

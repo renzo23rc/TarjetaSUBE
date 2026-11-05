@@ -12,6 +12,7 @@ public class TarjetaDbContext : DbContext
     public DbSet<Colectivo> Colectivos => Set<Colectivo>();
     public DbSet<Boleto> Boletos => Set<Boleto>();
     public DbSet<TarjetaTipo> TarjetaTipos => Set<TarjetaTipo>();
+    public DbSet<RetiroBicicleta> RetirosBicicletas => Set<RetiroBicicleta>();
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
@@ -23,6 +24,15 @@ public class TarjetaDbContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.Entity<RetiroBicicleta>()
+            .HasOne(r => r.Tarjeta)
+            .WithMany()
+            .HasForeignKey(r => r.TarjetaId);
+
+        modelBuilder.Entity<RetiroBicicleta>()
+            .Property(r => r.MultaPendiente)
+            .HasPrecision(18, 2);
+
         modelBuilder.Entity<Tarjeta>()
             .Property(t => t.Saldo)
             .HasPrecision(18, 2);

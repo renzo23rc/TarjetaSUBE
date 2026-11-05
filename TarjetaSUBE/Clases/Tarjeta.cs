@@ -42,7 +42,7 @@ public class Tarjeta
 
     public bool Pagar(decimal tarifa)
     {
-        if (Saldo - tarifa < SaldoMinimo)
+        if (tarifa < 0m || Saldo - tarifa < SaldoMinimo)
         {
             return false;
         }
