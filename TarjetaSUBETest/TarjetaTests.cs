@@ -156,6 +156,20 @@ public class TarjetaTests
     }
 
     [Test]
+    public void Pagar_RechazaTarifaNegativaSinModificarSaldoNiCargaPendiente()
+    {
+        var tarjeta = Tarjeta.Crear();
+        tarjeta.CargarSaldo(30000m);
+        tarjeta.CargarSaldo(30000m);
+
+        var resultado = tarjeta.Pagar(-100000m);
+
+        Assert.That(resultado, Is.False);
+        Assert.That(tarjeta.Saldo, Is.EqualTo(56000m));
+        Assert.That(tarjeta.SaldoPendiente, Is.EqualTo(4000m));
+    }
+
+    [Test]
     public void Pagar_NoPuedeQuedarConMenosSaldoQueElPermitido()
     {
         var tarjeta = DejarTarjetaConSaldo(200m);
