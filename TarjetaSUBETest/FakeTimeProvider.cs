@@ -7,7 +7,7 @@ using TarjetaSUBE;
 /// Devuelve siempre la misma hora hasta que se la avanza o se la cambia manualmente.
 /// Alineado a IProveedorFecha de la referencia (sin TimeProvider).
 /// </summary>
-public sealed class FakeTimeProvider : IProveedorFecha
+public class FakeTimeProvider : IProveedorFecha
 {
     private DateTime _ahora;
 

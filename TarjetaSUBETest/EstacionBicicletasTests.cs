@@ -404,7 +404,7 @@ public class EstacionBicicletasTests
     }
 
     // Simula un fallo durante SaveChanges sin definir sentencias SQL en la prueba.
-    private sealed class InterceptorDeFallo : DbCommandInterceptor
+    private class InterceptorDeFallo : DbCommandInterceptor
     {
         private int? _comandosRestantes;
         public int ComandosAntesDelFallo { get; private set; }
