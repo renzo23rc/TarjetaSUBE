@@ -10,6 +10,7 @@ public class Boleto
     public string TipoTarjeta { get; set; } = string.Empty;
     public string Linea { get; set; } = string.Empty;
     public bool EsTrasbordo { get; set; }
+    public bool ConDescuento { get; set; }
     public int TarjetaId { get; set; }
     public Tarjeta? Tarjeta { get; set; }
     public int ColectivoId { get; set; }

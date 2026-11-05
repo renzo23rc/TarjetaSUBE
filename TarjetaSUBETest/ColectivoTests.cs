@@ -243,6 +243,46 @@ public class ColectivoTests
     }
 
     [Test]
+    public void MedioBoleto_TrasbordoGratis_NoConsumeElCupoDeDescuentoDiario()
+    {
+        var tarjeta = Tarjeta.Crear(new TarjetaMedioBoleto());
+        tarjeta.CargarSaldo(10000m);
+
+        // 10:00 L102: paga medio (1075).
+        Assert.That(Colectivo.Crear("102").PagarCon(tarjeta), Is.True);
+        // 10:20 L142: trasbordo gratis, no consume cupo.
+        _reloj.Avanzar(TimeSpan.FromMinutes(20));
+        Assert.That(Colectivo.Crear("142").PagarCon(tarjeta), Is.True);
+        // 10:40 L142: misma línea que el último, se cobra con descuento.
+        _reloj.Avanzar(TimeSpan.FromMinutes(20));
+        Assert.That(Colectivo.Crear("142").PagarCon(tarjeta), Is.True);
+
+        var boletos = _db.Boletos.OrderBy(b => b.Id).ToArray();
+        Assert.That(boletos[1].EsTrasbordo, Is.True);
+        Assert.That(boletos.Select(b => b.Tarifa).ToArray(), Is.EqualTo(new[] { 1075m, 0m, 1075m }));
+        Assert.That(tarjeta.Saldo, Is.EqualTo(10000m - 1075m - 1075m));
+    }
+
+    [Test]
+    public void MedioBoleto_TrasbordoGratis_NoConsumeElCupoEnInterurbano()
+    {
+        var tarjeta = Tarjeta.Crear(new TarjetaMedioBoleto());
+        tarjeta.CargarSaldo(10000m);
+
+        // 10:00 L102: paga medio (1075).
+        Assert.That(Colectivo.Crear("102").PagarCon(tarjeta), Is.True);
+        // 10:20 L142: trasbordo gratis, no consume cupo.
+        _reloj.Avanzar(TimeSpan.FromMinutes(20));
+        Assert.That(Colectivo.Crear("142").PagarCon(tarjeta), Is.True);
+        // 11:05 interurbano: fuera de la ventana de trasbordo, se cobra con descuento.
+        _reloj.Avanzar(TimeSpan.FromMinutes(45));
+        Assert.That(Colectivo.CrearInterurbano("Gálvez").PagarCon(tarjeta), Is.True);
+
+        var tarifas = _db.Boletos.OrderBy(b => b.Id).Select(b => b.Tarifa).ToArray();
+        Assert.That(tarifas, Is.EqualTo(new[] { 1075m, 0m, 1500m }));
+    }
+
+    [Test]
     public void BoletoGratuito_NoPermiteMasDeDosViajesGratisPorDia()
     {
         var tarjeta = Tarjeta.Crear(new TarjetaBoletoGratuito());

@@ -68,6 +68,7 @@ public class Colectivo
             TipoTarjeta = tarjeta.TarjetaTipo?.Nombre ?? "Normal",
             Linea = Linea,
             EsTrasbordo = esTrasbordo,
+            ConDescuento = !esTrasbordo && tarifa < Tarifa,
             Tarjeta = tarjeta,
             Colectivo = this,
         };
